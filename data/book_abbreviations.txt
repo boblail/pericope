@@ -1,0 +1,69 @@
+1	genesis	gen?	gn
+2	exodus	exo?d?	ex	
+3	leviticus	le?v	levi	le
+4	numbers?	nu?m	nu	numb
+5	deuteronomy	deut?	dt
+6	joshua	jo?sh	jos
+7	judges	jd?gs?	judg	
+8	ruth?	ru	rth
+# isa is technically an abbrev for both Isaiah and 1 Samuel, but it should only be for isaiah
+23	isaiah	isa?	ia	isa[ih]
+# there's a space in '1 st', etc, because query normalization puts one in; 2 before 1 because 'samuel' matches 1 samuel
+10	(?:2|ii|second|2 nd) ?samuels?	(?:2|ii|second|2 nd) ?sa?m?
+9	(?:(?:1|i|first|1 st) ?)?samuels?	(?:1|i|first|1 st) ?sa?m?
+12	(?:2|ii|second|2 nd) ?ki?ng?s?	(?:2|ii|second|2 nd) ?ki?	(?:2|ii|second|2 nd) ?kgs?
+11	(?:(?:1|i|first|1 st) ?)?ki?ng?s?	(?:1|i) ?ki?	(?:1|i|first|1 st) ?kgs?
+14	(?:2|ii|second|2 nd) ?chronicles?	(?:2|ii|second|2 nd) ?chr?	(?:2|ii|second|2 nd) ?chro?n?
+13	(?:(?:1|i|first|1 st) ?)?chronicles?	(?:1|i|first|1 st) ?chr?	(?:1|i|first|1 st) ?chro?n?
+15	ezra?
+16	nehemiah	neh?
+17	esther	esth?	es
+18	jo?b
+19	psa?lms?	ps[as]?m?
+20	proverbs?	pro?v?	prvbs?	pv
+21	ecclesiastes?	eccl?	eccles	ecl?
+22	(?:the ?)?song ?of ?solomon	(?:the ?)?song ?of ?songs	sn?gs?	songs?	so?s	sol?	son	s ?of ? s
+24	jeremiah?	jer?	jr	jere
+25	lamentations?	lam?	lm
+26	ezekiel	ez[ek]	ezek
+27	daniel	da?n	dl	da
+28	hosea	ho?s	hos?
+29	joel?	jl
+30	amo?s?
+31	obadiah?	obad?	obd?
+32	jonah	jon
+33	micah?	mic?
+34	nahum	nah?	nahu
+35	habakk?uk	habk?
+36	zephaniah?	ze?ph?
+37	haggai	ha?gg?
+38	zechariah?	ze?ch?
+39	malachi?	mal
+40	matthew	ma?tt?
+41	ma?rk?	mk
+42	luke?	lk	lu
+# don't want john to gobble up the "jn" when they really mean 1 jn
+62	(?:1|i|first|1 st) ?john?	(?:1|i|first|1 st) ?jh?n	(?:1|i|first|1 st) ?jon?	(?:1|i|first|1 st) ?jh
+63	(?:2|ii|second|2 nd) ?john?	(?:2|ii|second|2 nd) ?jh?n	(?:2|ii|second|2 nd) ?jon?	(?:2|ii|second|2 nd) ?jh
+64	(?:3|iii|third|3 rd) ?john?	(?:3|iii|third|3 rd) ?jh?n	(?:3|iii|third|3 rd) ?jon?	(?:3|iii|third|3 rd) ?jh
+43	john?	jh?n
+44	acts	act?
+45	romans?	rom?	rms?	roms
+47	(?:2|ii|second|2 nd) ?corinthians?	(?:2|ii|second|2 nd) ?cor?	(?:2|ii) ?corint?h?	(?:2|ii) ?corth
+46	(?:(?:1|i|first|1 st) ?)?corinthians?	(?:1|i|first|1 st) ?cor?	(?:1|i|first|1 st) ?corint?h?	(?:1|i|first|1 st) ?corth
+48	galatians?	gal?	galat?
+49	ephesians?	eph?	ephe?s?
+50	philippians?	phi?l	php	phi	philipp?
+51	colossi?ans?	col?
+53	(?:2|ii|second|2 nd) ?thessalonians?	(?:2|ii|second|2 nd) ?thes{1,}	(?:2|ii|second|2 nd) ?the?s?
+52	(?:(?:1|i|first|1 st) ?)?thessalonians?	(?:(?:1|i|first|1 st) ?)?thes{1,}	(?:(?:1|i|first|1 st) ?)?the?s?
+55	(?:2|ii|second|2 nd) ?timothy?	(?:2|ii|second|2 nd) ?tim?	(?:2|ii|second|2 nd) ?tm
+54	(?:(?:1|i|first|1 st) ?)?timothy?	(?:1|i|first|1 st) ?tim?	(?:1|i|first|1 st) ?tm
+56	titus	tit?
+57	philemon	phl?mn?	philem?
+58	hebrews?	heb
+59	james?	ja[ms]?	jms?
+61	(?:2|ii|second|2 nd) ?peter?	(?:2|ii|second|2 nd) ?pe?t?r?
+60	(?:(?:1|i|first|1 st) ?)?peter?	(?:1|i|first|1 st) ?pe?t?r?
+65	jude
+66	revelations?	re?v	re	revel
