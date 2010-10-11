@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.platform     = Gem::Platform::RUBY
   s.authors      = ["Bob Lail"]
   s.email        = ["robert.lail@cph.org"]
-  # s.homepage     = "http://cphepdev.cph.pri"
+  s.homepage     = "http://github.com/boblail/Pericope"
   s.summary      = "Parses Bible references"
   # s.description  = "Epic automates administrative tasks for Emerging Products"
                    
