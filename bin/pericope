@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.expand_path("../../lib", __FILE__)
+require 'pericope/cli'
+
+command = ARGV.shift
+arguments = ARGV
+
+Pericope::CLI.run(command, *arguments)

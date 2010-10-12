@@ -87,6 +87,19 @@ class Pericope
   
   
   
+  def self.sub(text)
+    segments = split(text)
+    segments.inject("") do |text, segment|
+      if segment.is_a?(String)
+        text << segment
+      else
+        text << segment.to_a.join(" ")
+      end
+    end
+  end
+  
+  
+  
   def to_s
     "#{book_name} #{self.well_formatted_reference}"
   end

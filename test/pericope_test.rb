@@ -187,4 +187,13 @@ class PericopeTest < ActiveSupport::TestCase
   
   
   
+  test "pericope substitution" do 
+    text =  "2 Peter 3:1-2 Lorem ipsum dolor sit amet"
+    intended_text = "61003001 61003002 Lorem ipsum dolor sit amet"
+    actual_text = Pericope.sub(text)
+    assert_equal intended_text, actual_text
+  end
+  
+  
+  
 end
