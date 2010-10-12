@@ -17,8 +17,8 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = ">= 1.3.6"
   s.add_dependency "activesupport"
                            
-  s.files        = Dir.glob("{data,lib}/**/*") + %w(README.mdown)
-  s.executables  = []
-  # s.default_executable = 'epic'
+  s.files        = Dir.glob("{bin,data,lib}/**/*") + %w(README.mdown)
+  s.executables  = ['pericope']
+  s.default_executable = 'pericope'
   s.require_path = 'lib'
 end
