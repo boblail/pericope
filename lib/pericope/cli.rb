@@ -6,13 +6,14 @@ class Pericope
     
     
     
-    ALLOWED_COMMANDS = %w{help normalize parse substitute usage}
+    ALLOWED_COMMANDS = %w{help normalize parse substitute reverse-substitute usage}
     
     
     
     def self.run(command, *args)
       if ALLOWED_COMMANDS.member?(command)
-        CLI.new(*args).send(command.to_sym)
+        command = command.gsub(/-/, '_').to_sym
+        CLI.new(*args).send(command)
       else
         CLI.new(*args).usage
       end
@@ -65,6 +66,16 @@ Glossary
     
     
     
+    def reverse_substitute
+      begin
+        print Pericope.rsub(input)
+      rescue
+        print $!.to_s
+      end
+    end
+    
+    
+    
     def usage
       print <<-USAGE
 
@@ -74,11 +85,12 @@ Usage
 
 Commands
 
-  help            Prints more information about pericope
-  normalize       Accepts a pericope and returns a properly-formatted pericope
-  parse           Accepts a pericope and returns a list of verse IDs
-  substitute      Accepts a block of text and replaces all pericopes in the text with verse IDs
-  usage           Prints this message
+  help                Prints more information about pericope
+  normalize           Accepts a pericope and returns a properly-formatted pericope
+  parse               Accepts a pericope and returns a list of verse IDs
+  substitute          Accepts a block of text and replaces all pericopes in the text with verse IDs
+  reverse-substitute  Accepts a block of text and replaces collections of verse IDs with pericopes
+  usage               Prints this message
 
       USAGE
     end

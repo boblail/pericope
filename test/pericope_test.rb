@@ -11,6 +11,15 @@ class PericopeTest < ActiveSupport::TestCase
   
   
   
+  test "parsing a pericope of just chapters" do
+    pericope = Pericope.new('ps 1-8')
+    assert_equal 'Psalm', pericope.book_name
+    assert_equal 150, pericope.book_chapter_count
+    assert_equal true, pericope.book_has_chapters?
+  end
+  
+  
+  
   test "parsing single pericopes" do
     tests = {
       # test basic parsing
@@ -91,10 +100,10 @@ class PericopeTest < ActiveSupport::TestCase
       ["(Acts 13:4-20)"] => "Acts 13:4-20"
     }
     
-    tests.each do |references, intended_result|
+    tests.each do |references, expected_result|
       pericopes = references.map {|reference| Pericope.new(reference)}
       for pericope in pericopes
-        assert_equal pericope.to_s, intended_result,      "Formatting failure: expected #{pericope.original_string} to become #{intended_result}, not #{pericope.to_s}."
+        assert_equal pericope.to_s, expected_result,      "Formatting failure: expected #{pericope.original_string} to become #{expected_result}, not #{pericope.to_s}."
       end
     end
   end
@@ -107,20 +116,35 @@ class PericopeTest < ActiveSupport::TestCase
       ["ps 1"] => [19001001, 19001002, 19001003, 19001004, 19001005, 19001006],
       ["ps 122:6-124:2"] => [19122006, 19122007, 19122008, 19122009, 19123001, 19123002, 19123003, 19123004, 19124001, 19124002]
     }
-
-    tests.each do |references, intended_result|
+    
+    tests.each do |references, expected_result|
       pericopes = references.map {|reference| Pericope.new(reference)}
       for pericope in pericopes
-        assert_equal pericope.to_a, intended_result,      "Formatting failure: expected #{pericope.original_string} to include #{intended_result}, not #{pericope.to_a}."
+        assert_equal expected_result, pericope.to_a,      "Formatting failure: expected #{pericope.original_string} to include #{expected_result}, not #{pericope.to_a}."
       end
     end
   end
   
   
   
+  test "converting arrays to pericopes" do
+    tests = {
+      "Genesis 1:1" => [1001001],
+      "Psalm 1" => [19001001, 19001002, 19001003, 19001004, 19001005, 19001006],
+      "Psalm 122:6-124:2" => [19122006, 19122007, 19122008, 19122009, 19123001, 19123002, 19123003, 19123004, 19124001, 19124002]
+    }
+    
+    tests.each do |expected_result, array|
+      pericope = Pericope.new(array)
+      assert_equal expected_result, pericope.to_s
+    end    
+  end
+  
+  
+  
   test "splitting text with pericopes" do
     text = "Paul, rom. 12:1-4, Romans 9:7, 11, Election, Theology of Glory, Theology of the Cross, 1 Cor 15, Resurrection"
-    intended_keywords = [
+    expected_keywords = [
       "Paul",
       "Romans 12:1-4",
       "Romans 9:7, 11",
@@ -134,7 +158,7 @@ class PericopeTest < ActiveSupport::TestCase
     # Remove leading and trailing whitespace.
     # Remove segments that consisted only of whitespace.
     keywords = Pericope.split(text, ",").map {|s| s.to_s.strip}.delete_if{|s| s.length==0}
-    assert_equal intended_keywords, keywords
+    assert_equal expected_keywords, keywords
   end
   
   
@@ -152,7 +176,7 @@ class PericopeTest < ActiveSupport::TestCase
             suscipit, tellus nibh sodales tortor, non lobortis neque sapien quis ante. Vivamus laoreet, mi eu imperdiet
             bibendum, purus orci iaculis mi, vel first kings mi nisi auctor mauris. Integer dapibus lacinia arcu, ac
             dignissim justo consectetur sit amet. (Acts 13:4-20)"
-    intended_text = " Lorem ipsum dolor sit amet, Mark consectetur adipiscing elit 7. 1-2 Donec aliquam erat luctus
+    expected_text = " Lorem ipsum dolor sit amet, Mark consectetur adipiscing elit 7. 1-2 Donec aliquam erat luctus
             lacinia. Cras aliquet urna sed massa viverra eget ultricies risus sodales. Maecenas aliquet felis nec
             justo pharetra rutrum eget a risus. () Etiam tincidunt pellentesque cursus. Nulla est libero,
             bibendum sed elementum vitae, elementum vehicula quam. In bibendum massa sed quam convallis sed lacinia
@@ -170,7 +194,7 @@ class PericopeTest < ActiveSupport::TestCase
     #   samuel          - no reference part
     #   leo 3"2-1       - 'leo' is not a book of the Bible
     #   first kings     - no reference part
-    intended_results = [
+    expected_results = [
       "2 Peter 3:1", # nb: chapter coercion
       "James 1:13, 20",
       "John 21:14",
@@ -181,17 +205,21 @@ class PericopeTest < ActiveSupport::TestCase
       "Acts 13:4-20"
     ]
     hash = Pericope.extract(text)
-    assert_equal intended_results, hash[:pericopes].map {|pericope| pericope.to_s}
-    assert_equal intended_text, hash[:text]
+    assert_equal expected_results, hash[:pericopes].map {|pericope| pericope.to_s}
+    assert_equal expected_text, hash[:text]
   end
   
   
   
   test "pericope substitution" do 
     text =  "2 Peter 3:1-2 Lorem ipsum dolor sit amet"
-    intended_text = "61003001 61003002 Lorem ipsum dolor sit amet"
+    expected_text = "{{61003001 61003002}} Lorem ipsum dolor sit amet"
     actual_text = Pericope.sub(text)
-    assert_equal intended_text, actual_text
+    assert_equal expected_text, actual_text
+
+    expected_text, text = text, expected_text
+    actual_text = Pericope.rsub(text)
+    assert_equal expected_text, actual_text
   end
   
   

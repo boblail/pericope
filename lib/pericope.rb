@@ -2,28 +2,45 @@ require 'yaml'
 require 'pericope/version'
 
 class Pericope
-  attr_reader :original_string, :book, :book_name, :book_chapter_count, :book_has_chapters, :ranges, :index
-  
-  
-  
-  def initialize(match)
-    match = Pericope.match_one(match) if match.is_a?(String)
-    raise "no pericope found in input" unless match.is_a?(MatchData)
-    
-    @original_string = match.to_s
-    @index = match.begin(0)
-    @book = match.instance_variable_get("@book")
-    @book_name = Pericope.book_names[@book-1]
-    @book_chapter_count = Pericope.book_chapter_counts[@book-1]
-    @book_has_chapters = (book_chapter_count > 1)
-    reference = normalize_reference(match[1])
-    @ranges = parse_ranges(reference.split(/[,;]/))
-  end
+  attr_reader :book,
+              :book_chapter_count,
+              :book_name,
+              :index,
+              :original_string,
+              :ranges
   
   
   
   def self.book_names
     @@book_names ||= ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalm", "Proverbs", "Ecclesiastes", "Song of Songs", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel",  "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John ", "2 John", "3 John", "Jude", "Revelation"]
+  end
+  
+  
+  
+  def initialize(string_or_array)
+    case string_or_array
+    when String, MatchData
+      match = string_or_array.is_a?(String) ? Pericope.match_one(string_or_array) : string_or_array
+      raise "no pericope found in #{string_or_array} (#{string_or_array.class})" if match.nil?
+      
+      @original_string = match.to_s
+      @index = match.begin(0)
+      set_book match.instance_variable_get('@book')
+      @ranges = parse_reference(match[1])
+      
+    when Array
+      set_book Pericope.get_book(string_or_array.first)
+      @ranges = Pericope.group_array_into_ranges(string_or_array)
+      
+    else
+      raise ArgumentError, "#{string_or_array.class} is not a recognized input for pericope"
+    end
+  end
+  
+  
+  
+  def book_has_chapters?
+    (book_chapter_count > 1)
   end
   
   
@@ -81,7 +98,6 @@ class Pericope
         pericopes << segment
       end
     end
-    #segments.delete_if {|segment| !segment.is_a?(String)}
     {:text => text, :pericopes => pericopes}
   end
   
@@ -93,8 +109,17 @@ class Pericope
       if segment.is_a?(String)
         text << segment
       else
-        text << segment.to_a.join(" ")
+        text << "{{#{segment.to_a.join(" ")}}}"
       end
+    end
+  end
+  
+  
+  
+  def self.rsub(text)
+    text.gsub(/\{\{(\d{7,8} ?)+\}\}/) do |match|
+      ids = match[2...-2].split.collect(&:to_i)
+      Pericope.new(ids).to_s
     end
   end
   
@@ -138,7 +163,7 @@ class Pericope
   
   def well_formatted_reference
     recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
-    recent_chapter = 1 if !self.book_has_chapters
+    recent_chapter = 1 if !self.book_has_chapters?
     ranges.map do |range|
       min_chapter = Pericope.get_chapter(range.min)
       min_verse = Pericope.get_verse(range.min)
@@ -158,9 +183,9 @@ class Pericope
           recent_chapter = min_chapter
           s << "#{min_chapter}:#{min_verse}"
         end
-  
+        
         if range.count > 1
-  
+          
           s << "-"
           if min_chapter == max_chapter
             s << max_verse.to_s
@@ -193,12 +218,33 @@ class Pericope
   def self.get_max_verse(book, chapter)
     id = (book * 1000000) + (chapter * 1000)
     chapter_verse_counts[id]
-    # ActiveRecord::Base.connection.select_value("SELECT verses FROM chapter_verse_count WHERE id=#{id}").to_i
   end
   
   
   
-protected
+private
+  
+  
+  
+  def set_book(value)
+    @book = value || raise(ArgumentError, "must specify book")
+    @book_name = Pericope.book_names[@book-1]
+    @book_chapter_count = Pericope.book_chapter_counts[@book-1]    
+  end
+  
+  
+  
+  def parse_reference(reference)
+    reference = normalize_reference(reference)
+    (reference.nil? || reference.empty?) ? [] : parse_ranges(reference.split(/[,;]/))
+  end
+  
+  def normalize_reference(reference)
+    { %r{(\d+)[".](\d+)} => '\1:\2',       # 12"5 and 12.5 -> 12:5
+      %r{[^0-9,:;-]} => ''                 # remove everything but [0-9,;:-]
+    }.each {|pattern, replacement| reference.gsub!(pattern, replacement)}
+    reference
+  end
   
   
   
@@ -208,6 +254,17 @@ protected
   
   def self.get_last_verse(book, chapter)
     get_id(book, chapter, get_max_verse(book, chapter))
+  end
+  
+  def self.get_next_verse(id)
+    id + 1
+  end
+  
+  def self.get_start_of_next_chapter(id)
+    book = get_book(id)
+    chapter = get_chapter(id) + 1
+    verse = 1
+    get_id(book, chapter, verse)
   end
   
   def self.get_id(book, chapter, verse) #, constrain_verse=false)
@@ -244,12 +301,41 @@ protected
   
   
   
+  def self.group_array_into_ranges(array)
+    return [] if array.nil? or array.empty?
+    
+    array.flatten!
+    array.compact!
+    array.sort!
+    
+    ranges = []
+    range_start = array.shift
+    range_end = range_start
+    while true
+      next_value = array.shift
+      break if next_value.nil?
+      
+      if (next_value == get_next_verse(range_end)) ||
+         (next_value == get_start_of_next_chapter(range_end))
+        range_end = next_value
+      else
+        ranges << (range_start..range_end)
+        range_start = range_end = next_value
+      end
+    end
+    ranges << (range_start..range_end)
+    
+    ranges
+  end
+  
+  
+  
   # matches the first valid Bible reference in the supplied string
   def self.match_one(text)
     match_all(text) do |match|
       return match
     end
-    return nil
+    nil
   end
   
   
@@ -267,8 +353,7 @@ protected
         # after matching "2 Peter" don't match "Peter" again as "1 Peter"
         # but keep the same number of characters in the string so indices work
         unmatched = match.pre_match + ("*" * length) + match.post_match
-        match.instance_variable_set("@book", book[0])
-        # match = [match, book[0]]
+        match.instance_variable_set('@book', book[0])
         if block_given?
           yield match
         else
@@ -283,7 +368,7 @@ protected
   
   def parse_ranges(ranges)
     recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
-    recent_chapter = 1 if !self.book_has_chapters
+    recent_chapter = 1 if !self.book_has_chapters?
     ranges.map do |range|
       range = range.split('-') # parse the low end of a verse range and the high end separately
       range << range[0] if (range.length < 2) # treat 12:4 as 12:4-12:4
@@ -344,15 +429,6 @@ protected
       end
     end
     book_abbreviations
-  end
-  
-  
-  
-  def normalize_reference(reference)
-    { %r{(\d+)[".](\d+)} => '\1:\2',       # 12"5 and 12.5 -> 12:5
-      %r{[^0-9,:;-]} => ''                 # remove everything but [0-9,;:-]
-    }.each {|pattern, replacement| reference.gsub!(pattern, replacement)}
-    reference
   end
   
   
