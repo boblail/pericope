@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 require 'yaml'
 require 'pericope/version'
 
@@ -240,9 +242,10 @@ private
   end
   
   def normalize_reference(reference)
-    { %r{(\d+)[".](\d+)} => '\1:\2',       # 12"5 and 12.5 -> 12:5
-      %r{[^0-9,:;-]} => ''                 # remove everything but [0-9,;:-]
-    }.each {|pattern, replacement| reference.gsub!(pattern, replacement)}
+    [ [%r{(\d+)[".](\d+)},'\1:\2'],       # 12"5 and 12.5 -> 12:5
+      [%r{(–|—)},'-'],                     # convert em dash and en dash to -
+      [%r{[^0-9,:;\-–—]},'']              # remove everything but [0-9,;:-]
+    ].each { |pattern, replacement| reference.gsub!(pattern, replacement) }
     reference
   end
   
@@ -516,15 +519,8 @@ private
       22]       # Revelation      66
   end
   
-  
-  
   ValidReference = begin
-    chapter = '\d{1,3}' # matches 0-999
-    verse = '\d{1,3}[ab]?' # matches 0-999 with or without 'a' or 'b' afterward
-    chapter_verse = "#{chapter}(?:\\s?[.:\"]\\s?#{verse})?" # matches chapter with or without verse reference
-    chapter_verse_range = "(?:#{chapter_verse}(?:\\s?[\\&\\-]\\s?(?:(?:#{chapter_verse})|(?:#{verse})))?)"
-     # "(#{chapter}(?:[.:]#{verse})?(?:\\s?[\\&\\-]\\s?(?:#{verse}(?:[.:]\\d{1,3})?)?)" # chapter:verse reference
-    reference = "#{chapter_verse_range}(?:\\s?[,;]\\s?#{chapter_verse_range})*" # multiple chapter:verse references
+    reference = '((\s*\d{1,3})(\s*[:\"\.]\s*\d{1,3}(a|b)?(\s*(,|;)\s*(\d{1,3}[:\"\.])?\s*\d{1,3}(a|b)?)*)?(\s*(-|–|—)\s*(\d{1,3}\s*[:\"\.])?(\d{1,3}(a|b)?)(\s*(,|;)\s*(\d{1,3}\s*[:\"\.])?\s*\d{1,3}(a|b)?)*)*)'
   end
   
   
