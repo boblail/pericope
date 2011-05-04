@@ -245,12 +245,14 @@ private
   
   def parse_reference(reference)
     reference = normalize_reference(reference)
-    (reference.nil? || reference.empty?) ? [] : parse_ranges(reference.split(/[,;]/))
+    (reference.nil? || reference.empty?) ? [] : parse_ranges(reference.split(/[,;]/).delete_if{|s| s.length==0})
   end
   
   def normalize_reference(reference)
-    [ [%r{(\d+)[".](\d+)},'\1:\2'],       # 12"5 and 12.5 -> 12:5
-      [%r{(–|—)},'-'],                     # convert em dash and en dash to -
+    [ [%r{[".]},':'],                     # 12"5 and 12.5 -> 12:5
+      [%r{:\s*\(},':'],                   # replace any ( after a : with a : only
+      [%r{(\(|\))},','],                  # replace any remaining () with a , 
+      [%r{(–|—)},'-'],                    # convert em dash and en dash to -
       [%r{[^0-9,:;\-–—]},'']              # remove everything but [0-9,;:-]
     ].each { |pattern, replacement| reference.gsub!(pattern, replacement) }
     reference
@@ -348,8 +350,28 @@ private
     nil
   end
   
-  
-  
+  def self.get_unmatched_ending(match)
+    i      = 0
+    str    = match.to_s
+    stack  = []
+
+    str.each_char { |c| 
+      if c == '('
+        stack << c
+      elsif c == ')'
+        if stack.size() > 0
+          stack.pop()
+        else
+          return str[i..str.length-1] 
+        end
+      end
+      i = i + 1
+    }
+
+    return ""
+  end
+
+
   # matches all valid Bible references in the supplied string
   # ! will not necessarily return references in order !
   def self.match_all(text, &block)
@@ -359,8 +381,17 @@ private
     for book_regex in book_name_regexes
       rx = book_regex[1]
       while (match = unmatched.match rx) # find all occurrences of pericopes in this book
-        length = match.end(0) - match.begin(0)
-        
+
+        # calculate the unnecessary parens at the end of the statement
+        unmatchedEnding = Pericope.get_unmatched_ending(match)
+        length = match.end(0) - match.begin(0) - unmatchedEnding.length
+        lengthFromBegin = match.end(0) - unmatchedEnding.length
+
+        # recalculate the matchdata based on the shortened expression
+        if unmatchedEnding.length > 0 
+          match = unmatched[0..lengthFromBegin - 1].match(rx)
+        end
+
         # after matching "2 Peter" don't match "Peter" again as "1 Peter"
         # but keep the same number of characters in the string so indices work
         unmatched = match.pre_match + ("*" * length) + match.post_match
@@ -375,13 +406,15 @@ private
     block_given? ? text : matches
   end
   
-  
-  
   def parse_ranges(ranges)
+    return if ranges == nil
+
     recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
     recent_chapter = 1 if !self.book_has_chapters?
     ranges.map do |range|
+
       range = range.split('-') # parse the low end of a verse range and the high end separately
+
       range << range[0] if (range.length < 2) # treat 12:4 as 12:4-12:4
       lower_chapter_verse = range[0].split(':').map {|n| n.to_i} # parse "3:28" to [3,28]
       upper_chapter_verse = range[1].split(':').map {|n| n.to_i} # parse "3:28" to [3,28]
@@ -409,6 +442,7 @@ private
       Range.new(
         Pericope.get_id(book, lower_chapter_verse[0], lower_chapter_verse[1]),
         Pericope.get_id(book, upper_chapter_verse[0], upper_chapter_verse[1]))
+
     end
   end
   
@@ -528,7 +562,8 @@ private
   end
   
   ValidReference = begin
-    reference = '((\s*\d{1,3})(\s*[:\"\.]\s*\d{1,3}(a|b)?(\s*(,|;)\s*(\d{1,3}[:\"\.])?\s*\d{1,3}(a|b)?)*)?(\s*(-|–|—)\s*(\d{1,3}\s*[:\"\.])?(\d{1,3}(a|b)?)(\s*(,|;)\s*(\d{1,3}\s*[:\"\.])?\s*\d{1,3}(a|b)?)*)*)'
+    #note: this regular expression will include "optional" verses enclosed in parentheses by default                 
+    reference = '((\s*\d{1,3})(\s*[:\"\.]\s*\(?\s*\d{1,3}(a|b)?(\s*\))?(\s*(,|;| )\s*(\d{1,3}[:\"\.])?\s*\(?\s*\(?\s*\d{1,3}(a|b)?(\s*\))?)*)?(\s*(-|–|—)\s*(\s*\(?\s*\d{1,3}\s*[:\"\.])?(\d{1,3}(a|b)?)(\s*\))?(\s*(,|;| )\s*\(?\s*(\d{1,3}\s*[:\"\.])?\s*\(?\d{1,3}(a|b)?(\s*\))?)*)*)'
   end
   
   

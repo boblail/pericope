@@ -92,6 +92,16 @@ class PericopeTest < ActiveSupport::TestCase
       ["phil 1:1-17,2:3-5,17"] => "Philippians 1:1-17, 2:3-5, 17",                      # test comma-separated ranges
       
       # test the values embedded in the pericope extraction
+      ["Matt 1:1-2, 2:1-10"] => "Matthew 1:1-2, 2:1-10",
+      ["Matt 1:1-2, (1-10)"] => "Matthew 1:1-2, 1-10",
+      ["Matt 1:1-2, (2:1-10)"] => "Matthew 1:1-2, 2:1-10",
+      ["Matt 1:1-2 (2:1-10)"] => "Matthew 1:1-2, 2:1-10",
+      ["Matt 1:1-2 (2:1-10)"] => "Matthew 1:1-2, 2:1-10",
+      ["Matt 1:(1-10) 5:1-12"] => "Matthew 1:1-10, 5:1-12",
+      ["Matt 1\"(1-10) 5:(1-12)"] => "Matthew 1:1-10, 5:1-12",
+      ["Matt 1\" (1-10) 5:(1-12)"] => "Matthew 1:1-10, 5:1-12",
+      ["Mark 2:23-28 (3:1-6"] => "Mark 2:23-28, 3:1-6",
+      ["Psalm 29 (2)"] => "Psalm 29",
       ["Psalm 37:3–7a, 23–24, 39–40"] => "Psalm 37:3-7, 23-24, 39-40",
       ["John 20:19–23"] => "John 20:19-23",
       ["2 Peter 4.1 "] => "2 Peter 3:1", # nb: chapter coercion
