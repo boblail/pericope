@@ -92,6 +92,7 @@ class PericopeTest < ActiveSupport::TestCase
       ["phil 1:1-17,2:3-5,17"] => "Philippians 1:1-17, 2:3-5, 17",                      # test comma-separated ranges
       
       # test the values embedded in the pericope extraction
+      ["Leviticus (18:1–5) 19:9–18"] => "Leviticus 18:1-5, 19:9-18",
       ["Matt 1:1-2, 2:1-10"] => "Matthew 1:1-2, 2:1-10",
       ["Matt 1:1-2, (1-10)"] => "Matthew 1:1-2, 1-10",
       ["Matt 1:1-2, (2:1-10)"] => "Matthew 1:1-2, 2:1-10",

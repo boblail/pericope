@@ -563,7 +563,7 @@ private
   
   ValidReference = begin
     #note: this regular expression will include "optional" verses enclosed in parentheses by default                 
-    reference = '((\s*\d{1,3})(\s*[:\"\.]\s*\(?\s*\d{1,3}(a|b)?(\s*\))?(\s*(,|;| )\s*(\d{1,3}[:\"\.])?\s*\(?\s*\(?\s*\d{1,3}(a|b)?(\s*\))?)*)?(\s*(-|–|—)\s*(\s*\(?\s*\d{1,3}\s*[:\"\.])?(\d{1,3}(a|b)?)(\s*\))?(\s*(,|;| )\s*\(?\s*(\d{1,3}\s*[:\"\.])?\s*\(?\d{1,3}(a|b)?(\s*\))?)*)*)'
+    reference = '(\(?(\s*\d{1,3})(\s*[:\"\.]\s*\(?\s*\d{1,3}(a|b)?(\s*\))?(\s*(,|;| )\s*(\d{1,3}[:\"\.])?\s*\(?\s*\(?\s*\d{1,3}(a|b)?(\s*\))?)*)?(\s*(-|–|—)\s*(\s*\(?\s*\d{1,3}\s*[:\"\.])?(\d{1,3}(a|b)?)(\s*\))?(\s*(,|;| )\s*\(?\s*(\d{1,3}\s*[:\"\.])?\s*\(?\d{1,3}(a|b)?(\s*\))?)*)*)'
   end
   
   
