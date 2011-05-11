@@ -19,7 +19,13 @@ class PericopeTest < ActiveSupport::TestCase
     assert_equal 150, pericope.book_chapter_count
     assert_equal true, pericope.book_has_chapters?
   end
-  
+
+  test "combine" do
+    lhs = Pericope.new("gen 1")
+    rhs = Pericope.new("gen 2")
+    combined = Pericope.combine_from_same_book(lhs,rhs)
+    assert_equal combined.to_s,"Genesis 1-2"
+  end
   
   
   test "parsing single pericopes" do
