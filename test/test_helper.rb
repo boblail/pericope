@@ -1,6 +1,6 @@
 require 'rubygems'
-# require 'test/unit'
+require 'test/unit'
+require 'turn'
 require 'active_support'
 require 'active_support/test_case'
-require 'redgreen'
 require File.dirname(__FILE__) + '/../lib/pericope'
