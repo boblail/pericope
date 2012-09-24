@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = ">= 1.3.6"
   s.add_dependency "activesupport"
   s.add_development_dependency "turn"
+  s.add_development_dependency "pry"
                            
   s.files        = Dir.glob("{bin,data,lib}/**/*") + %w(README.mdown)
   s.executables  = ['pericope']
