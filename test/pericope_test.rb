@@ -9,6 +9,7 @@ class PericopeTest < ActiveSupport::TestCase
   
   test "get_max_verse" do
     assert_equal 29, Pericope.get_max_verse(1, 9)
+    assert_equal 26, Pericope.get_max_verse(1, 50)
   end
   
   
@@ -45,6 +46,7 @@ class PericopeTest < ActiveSupport::TestCase
       
       # test verse coercion
       ["mk 1:452"] => [41001045..41001045],
+      ["Genesis 15-55"] => [1015001..1050026],
       
       # test chapter coercion
       ["jn 28:1", "jn 125:1", "jn 21:1"] => [43021001..43021001],

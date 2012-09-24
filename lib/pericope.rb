@@ -294,7 +294,6 @@ private
   end
   
   def self.coerce_to_range(number, range)
-    number = number.to_i
     return range.begin if number < range.begin
     return range.end if number > range.end
     number
@@ -394,32 +393,42 @@ private
     ranges.map do |range|
       range = range.split('-') # parse the low end of a verse range and the high end separately
       range << range[0] if (range.length < 2) # treat 12:4 as 12:4-12:4
-      lower_chapter_verse = range[0].split(':').map {|n| n.to_i} # parse "3:28" to [3,28]
-      upper_chapter_verse = range[1].split(':').map {|n| n.to_i} # parse "3:28" to [3,28]
+      lower_chapter_verse = range[0].split(':').map(&:to_i) # parse "3:28" to [3,28]
+      upper_chapter_verse = range[1].split(':').map(&:to_i) # parse "3:28" to [3,28]
       
       # make sure the low end of the range and the high end of the range
       # are composed of arrays with two appropriate values: [chapter, verse]
       chapter_range = false
       if lower_chapter_verse.length < 2
-        if recent_chapter        
+        if recent_chapter
           lower_chapter_verse.unshift recent_chapter # e.g. parsing 11 in 12:1-8,11 => remember that 12 is the chapter
         else
+          lower_chapter_verse[0] = Pericope.to_valid_chapter(book, lower_chapter_verse[0])
           lower_chapter_verse << 1 # no verse specified; this is a range of chapters, start with verse 1
           chapter_range = true
         end
+      else
+        lower_chapter_verse[0] = Pericope.to_valid_chapter(book, lower_chapter_verse[0])
       end
+      lower_chapter_verse[1] = Pericope.to_valid_verse(book, *lower_chapter_verse)
+      
       if upper_chapter_verse.length < 2
         if chapter_range
+          upper_chapter_verse[0] = Pericope.to_valid_chapter(book, upper_chapter_verse[0])
           upper_chapter_verse << Pericope.get_max_verse(book, upper_chapter_verse[0]) # this is a range of chapters, end with the last verse
         else
           upper_chapter_verse.unshift lower_chapter_verse[0] # e.g. parsing 8 in 12:1-8 => remember that 12 is the chapter
         end
+      else
+        upper_chapter_verse[0] = Pericope.to_valid_chapter(book, upper_chapter_verse[0])
       end
+      upper_chapter_verse[1] = Pericope.to_valid_verse(book, *upper_chapter_verse)
+      
       recent_chapter = upper_chapter_verse[0] # remember the last chapter
       
       Range.new(
-        Pericope.get_id(book, lower_chapter_verse[0], lower_chapter_verse[1]),
-        Pericope.get_id(book, upper_chapter_verse[0], upper_chapter_verse[1]))
+        Pericope.get_id(book, *lower_chapter_verse),
+        Pericope.get_id(book, *upper_chapter_verse))
     end
   end
   
