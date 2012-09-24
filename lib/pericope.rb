@@ -229,6 +229,10 @@ class Pericope
     chapter_verse_counts[id]
   end
   
+  def self.get_max_chapter(book)
+    book_chapter_counts[book - 1]
+  end
+  
   
   
 private
@@ -277,24 +281,31 @@ private
     get_id(book, chapter, verse)
   end
   
-  def self.get_id(book, chapter, verse) #, constrain_verse=false)
-    book = book.to_i
-    book = 1 if book < 1
-    book = 66 if book > 66
+  def self.to_valid_book(book)
+    coerce_to_range(book, 1..66)
+  end
+  
+  def self.to_valid_chapter(book, chapter)
+    coerce_to_range(chapter, 1..get_max_chapter(book))
+  end
+  
+  def self.to_valid_verse(book, chapter, verse)
+    coerce_to_range(verse, 1..get_max_verse(book, chapter))
+  end
+  
+  def self.coerce_to_range(number, range)
+    number = number.to_i
+    return range.begin if number < range.begin
+    return range.end if number > range.end
+    number
+  end
+  
+  def self.get_id(book, chapter, verse)
+    book = to_valid_book(book)
+    chapter = to_valid_chapter(book, chapter)
+    verse = to_valid_verse(book, chapter, verse)
     
-    max = book_chapter_counts[book-1]
-    chapter = chapter.to_i
-    chapter = 1 if chapter < 1
-    chapter = max if chapter > max
-    
-    # max = constrain_verse ? get_max_verse(book, chapter) : 999
-    # max = 999
-    max = get_max_verse(book, chapter)
-    verse = verse.to_i
-    verse = 1 if verse < 1
-    verse = max if verse > max
-    
-    return (book * 1000000) + (chapter * 1000) + verse;
+    (book * 1000000) + (chapter * 1000) + verse
   end
   
   def self.get_book(id)
