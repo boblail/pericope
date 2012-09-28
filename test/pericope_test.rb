@@ -223,7 +223,7 @@ class PericopeTest < ActiveSupport::TestCase
     expected_text = "{{61003001 61003002}} Lorem ipsum dolor sit amet"
     actual_text = Pericope.sub(text)
     assert_equal expected_text, actual_text
-
+    
     expected_text, text = text, expected_text
     actual_text = Pericope.rsub(text)
     assert_equal expected_text, actual_text
@@ -231,4 +231,18 @@ class PericopeTest < ActiveSupport::TestCase
   
   
   
+end
+
+at_exit do
+  require 'benchmark'
+  
+  example = "Paul, rom. 12:1-4, Romans 9:7, 11, Election, Theology of Glory, Theology of the Cross, 1 Cor 15, Resurrection"
+  
+  bm = [100, 1000, 10000].map do |n|
+    Benchmark.measure do 
+      n.times { Pericope.split(example) }
+    end
+  end
+  
+  $stdout.puts "", "PERFORMANCE", *bm, ""
 end
