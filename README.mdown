@@ -17,6 +17,13 @@ Pericope is a gem for parsing Bible references.
 See `pericope_test.rb` for examples of usage.
 
 
+# History
+
+# 0.6.0
+
+ - Removed the `index` attribute
+
+
 # License
 
 Copyright (c) 2012 Bob Lail, released under the MIT license

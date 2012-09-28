@@ -7,7 +7,6 @@ class Pericope
   attr_reader :book,
               :book_chapter_count,
               :book_name,
-              :index,
               :original_string,
               :ranges
   
@@ -33,7 +32,6 @@ class Pericope
       raise "no pericope found in #{string_or_array} (#{string_or_array.class})" if match.nil?
       
       @original_string = match.to_s
-      @index = match.begin(0)
       set_book match.instance_variable_get('@book')
       @ranges = parse_reference(match[1])
       
