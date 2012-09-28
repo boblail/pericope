@@ -60,7 +60,7 @@ class Pericope
   
   
   
-  def self.parse(text, &block)
+  def self.parse(text)
     pericopes = []
     match_all text do |match|
       pericope = Pericope.new(match)
@@ -361,7 +361,7 @@ private
   
   # matches all valid Bible references in the supplied string
   # ! will not necessarily return references in order !
-  def self.match_all(text, &block)
+  def self.match_all(text)
     matches = []
     unmatched = text
     
