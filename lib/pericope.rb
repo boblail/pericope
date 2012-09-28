@@ -52,9 +52,10 @@ class Pericope
   
   
   
+  # Differs from Pericope.new in that it won't raise an exception
+  # if text does not contain a pericope but will return nil instead.
   def self.parse_one(text)
-    match = match_one(text)
-    match ? Pericope.new(match) : nil
+    Pericope.new(text) rescue nil
   end
   
   
