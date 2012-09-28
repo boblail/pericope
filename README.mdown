@@ -1,13 +1,22 @@
-Pericope
-========
+# Pericope
 
-Introduction goes here.
+Pericope is a gem for parsing Bible references.
+
+### Features
+
+ - Recognizes common abbreviations and misspellings for names of the books of the Bible
+ - Can compare two pericopes (e.g. Mark 13:1-6 and Mark 13:5) and determine if they intersect
+ - Parses single pericopes or streams them in a block of text
+ - Normalize pericopes into a well-formatted string
+ - Converts pericopes into an array of verses
+ - Reconstructs pericopes from arrays of verses
 
 
-Example
-=======
+# Examples
 
-Example goes here.
+See `pericope_test.rb` for examples of usage.
 
 
-Copyright (c) 2009 [name of plugin creator], released under the MIT license
+# License
+
+Copyright (c) 2012 Bob Lail, released under the MIT license
