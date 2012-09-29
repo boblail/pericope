@@ -202,7 +202,7 @@ class Pericope
   
   def well_formatted_reference
     recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
-    recent_chapter = 1 if !self.book_has_chapters?
+    recent_chapter = 1 unless book_has_chapters?
     ranges.map do |range|
       min_chapter = Pericope.get_chapter(range.min)
       min_verse = Pericope.get_verse(range.min)
@@ -210,11 +210,9 @@ class Pericope
       max_verse = Pericope.get_verse(range.max)
       s = ""
       
-      if (min_verse==1) and (max_verse>=Pericope.get_max_verse(book, max_chapter))
+      if min_verse == 1 and max_verse >= Pericope.get_max_verse(book, max_chapter)
         s << min_chapter.to_s
-        if max_chapter > min_chapter
-          s << "-#{max_chapter}"
-        end
+        s << "-#{max_chapter}" if max_chapter > min_chapter
       else
         if recent_chapter == min_chapter
           s << min_verse.to_s
@@ -273,8 +271,8 @@ private
   
   def set_book(value)
     @book = value || raise(ArgumentError, "must specify book")
-    @book_name = Pericope.book_names[@book-1]
-    @book_chapter_count = Pericope.book_chapter_counts[@book-1]    
+    @book_name = Pericope.book_names[@book - 1]
+    @book_chapter_count = Pericope.book_chapter_counts[@book - 1]
   end
   
   
