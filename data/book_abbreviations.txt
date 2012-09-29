@@ -1,5 +1,5 @@
 1	genesis	gen?	gn
-2	exodus	exo?d?	ex	
+2	exodus	exo?d?	ex
 3	leviticus	le?v	levi	le
 4	numbers?	nu?m	nu	numb
 5	deuteronomy	deut?	dt
