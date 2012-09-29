@@ -1,6 +1,5 @@
 # encoding: UTF-8
 
-require 'yaml'
 require 'pericope/version'
 
 class Pericope
@@ -472,10 +471,14 @@ private
   
   
   def self.load_chapter_verse_counts
-    path = File.expand_path(File.dirname(__FILE__) + "/../data/chapter_verse_count.yml")
+    path = File.expand_path(File.dirname(__FILE__) + "/../data/chapter_verse_count.txt")
+    chapter_verse_counts = []
     File.open(path) do |file|
-      return YAML.load(file)
+      file.each do |text|
+        chapter_verse_counts << text.chomp.split("\t")[0..1].map(&:to_i)
+      end
     end
+    Hash[chapter_verse_counts]
   end
   
   
