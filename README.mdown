@@ -2,19 +2,48 @@
 
 Pericope is a gem for parsing Bible references.
 
-### Features
-
- - Recognizes common abbreviations and misspellings for names of the books of the Bible
- - Can compare two pericopes (e.g. Mark 13:1-6 and Mark 13:5) and determine if they intersect
- - Parses single pericopes or streams them in a block of text
- - Normalize pericopes into a well-formatted string
- - Converts pericopes into an array of verses
- - Reconstructs pericopes from arrays of verses
-
+It recognizes common abbreviations and misspellings for names of the books of the Bible and a variety of ways of denoting ranges of chapters and verses. It can parse pericopes singly or out of a block of text. It's useful for comparing two pericopes for intersection and normalizing them into a well-formatted string.
 
 # Examples
 
-See `pericope_test.rb` for examples of usage.
+### Recognize common abbreviations and misspellings for names of the books of the Bible
+
+```ruby
+  Pericope.new("ps 118:17").to_s # => Psalm 118:17
+  Pericope.new("jas 3:1-5").to_s # => James 3:1-5
+  Pericope.new("1 jn 4:4").to_s  # => 1 John 4:4
+```
+
+### Compare two pericopes to see if they intersect
+
+```ruby
+  a = Pericope.new("Mark 13:1-6")
+  b = Pericope.new("Mark 13:5")
+  c = Pericope.new("Mark 13:6, 7")
+  
+  a.intersects?(b) # => true
+  a.intersects?(c) # => true
+  b.intersects?(c) # => false
+```
+
+### Parse pericopes out of a block of text
+
+```ruby
+  text = <<-TEXT
+  If then, the Word is so significant, great important attaches to its exact form. It has the form of a promise as in Isaiah 43:1: "Do not fear, for I have redeemed you; I have called you by name, you are mine," or as in Luke 2:10-11, "Do not be afraid..to you is born this day...a Savior." (Bayer, p51)
+  TEXT
+  
+  Pericope.parse(text) # => [Isaiah 43:1, Luke 2:10-11]
+  
+  Pericope.split(text) # => ["  If then, the Word is so significant, great important attaches to its exact form. It has the form of a promise as in ", Isaiah 43:1, ": \"Do not fear, for I have redeemed you; I have called you by name, you are mine,\" or as in ", Luke 2:10-11, ", \"Do not be afraid..to you is born this day...a Savior.\" (Bayer, p51)\n"]
+```
+
+### Converts pericopes into arrays of verses and reconstructs them from arrays of verses
+
+```ruby
+  array = Pericope.new("gen 1:1-3").to_a # => [1001001, 1001002, 1001003]
+  Pericope.new(array) # => Genesis 1:1-3
+```
 
 
 # History
@@ -23,6 +52,9 @@ See `pericope_test.rb` for examples of usage.
 
  - Removed the `index` attribute
  - Deprecated the `pattern` argument to the method `Pericope.split(text, pattern=nil)`
+ - Improved performance by 2x
+ - Added this README
+ - Fixed a bug with parsing inverted [invalid] ranges (e.g. Mark 3-1)
 
 
 # License
