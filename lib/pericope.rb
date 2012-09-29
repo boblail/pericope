@@ -405,14 +405,12 @@ private
   
   def self.parse_reference(book, reference)
     reference = normalize_reference(reference)
-    (reference.nil? || reference.empty?) ? [] : parse_ranges(book, reference.split(/[,;]/))
+    parse_ranges(book, reference.split(/[,;]/))
   end
   
   def self.normalize_reference(reference)
-    [ [%r{(\d+)[".](\d+)},'\1:\2'],       # 12"5 and 12.5 -> 12:5
-      [%r{(–|—)},'-'],                     # convert em dash and en dash to -
-      [%r{[^0-9,:;\-–—]},'']              # remove everything but [0-9,;:-]
-    ].each { |pattern, replacement| reference.gsub!(pattern, replacement) }
+    reference = reference.to_s
+    NORMALIZATIONS.each { |(regex, replacement)| reference.gsub!(regex, replacement) }
     reference
   end
   
@@ -593,6 +591,12 @@ private
   REFERENCE_PATTERN = '(?:\s*\d{1,3})(?:\s*[:\"\.]\s*\d{1,3}[ab]?(?:\s*[,;]\s*(?:\d{1,3}[:\"\.])?\s*\d{1,3}[ab]?)*)?(?:\s*[-–—]\s*(?:\d{1,3}\s*[:\"\.])?(?:\d{1,3}[ab]?)(?:\s*[,;]\s*(?:\d{1,3}\s*[:\"\.])?\s*\d{1,3}[ab]?)*)*'
   
   PERICOPE_PATTERN = /(#{BOOK_PATTERN})\.? (#{REFERENCE_PATTERN})/i
+  
+  NORMALIZATIONS = [
+    [/(\d+)[".](\d+)/, '\1:\2'], # 12"5 and 12.5 -> 12:5
+    [/[–—]/,           '-'],     # convert em dash and en dash to -
+    [/[^0-9,:;\-–—]/,  '']       # remove everything but [0-9,;:-]
+  ]
   
   
   
