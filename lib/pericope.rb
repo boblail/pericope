@@ -582,7 +582,7 @@ private
   
   BOOK_PATTERN = /\b(?:(?:1|2|3|i+|first|second|third|1st|2nd|3rd) )?(?:\w+| of )\b/
   
-  REFERENCE_PATTERN = '(\s*\d{1,3})(\s*[:\"\.]\s*\d{1,3}[ab]?(\s*[,;]\s*(\d{1,3}[:\"\.])?\s*\d{1,3}[ab]?)*)?(\s*[-–—]\s*(\d{1,3}\s*[:\"\.])?(\d{1,3}[ab]?)(\s*[,;]\s*(\d{1,3}\s*[:\"\.])?\s*\d{1,3}[ab]?)*)*'
+  REFERENCE_PATTERN = '(?:\s*\d{1,3})(?:\s*[:\"\.]\s*\d{1,3}[ab]?(?:\s*[,;]\s*(?:\d{1,3}[:\"\.])?\s*\d{1,3}[ab]?)*)?(?:\s*[-–—]\s*(?:\d{1,3}\s*[:\"\.])?(?:\d{1,3}[ab]?)(?:\s*[,;]\s*(?:\d{1,3}\s*[:\"\.])?\s*\d{1,3}[ab]?)*)*'
   
   PERICOPE_PATTERN = /(#{BOOK_PATTERN})\.? (#{REFERENCE_PATTERN})/i
   
