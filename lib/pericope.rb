@@ -126,6 +126,7 @@ class Pericope
   
   
   def self.extract(text)
+    puts "DEPRECATION NOTICE: the 'extract' method will be removed in Pericope 0.7.0"
     segments = split(text)
     text = ""
     pericopes = []
@@ -170,6 +171,7 @@ class Pericope
   
   
   def report
+    puts "DEPRECATION NOTICE: the 'report' method will be removed in Pericope 0.7.0"
     "  #{self.original_string} => #{self}"
   end
   

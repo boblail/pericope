@@ -48,10 +48,14 @@ It recognizes common abbreviations and misspellings for names of the books of th
 
 # History
 
+# 0.6.1
+
+ - Deprecated the `report` and `extract` methods (they will be removed in 0.7.0)
+
 # 0.6.0
 
  - Removed the `index` attribute
- - Deprecated the `pattern` argument to the method `Pericope.split(text, pattern=nil)`
+ - Deprecated the `pattern` argument to the method `Pericope.split(text, pattern=nil)` (it will be removed in 0.7.0)
  - Improved performance by 2x
  - Added this README
  - Fixed a bug with parsing inverted [invalid] ranges (e.g. Mark 3-1)

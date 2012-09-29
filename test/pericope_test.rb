@@ -246,9 +246,19 @@ class PericopeTest < ActiveSupport::TestCase
       "Luke 3:1",
       "Acts 13:4-20"
     ]
-    hash = Pericope.extract(text)
-    assert_equal expected_results, hash[:pericopes].map {|pericope| pericope.to_s}
-    assert_equal expected_text, hash[:text]
+    
+    actual_text = ""
+    actual_results = []
+    Pericope.split(text) do |text_or_pericope|
+      if text_or_pericope.is_a?(Pericope)
+        actual_results << text_or_pericope.to_s
+      else
+        actual_text << text_or_pericope
+      end
+    end
+    
+    assert_equal expected_results, actual_results
+    assert_equal expected_text, actual_text
   end
   
   
