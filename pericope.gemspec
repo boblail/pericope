@@ -10,9 +10,9 @@ Gem::Specification.new do |s|
   s.platform     = Gem::Platform::RUBY
   s.authors      = ["Bob Lail"]
   s.email        = ["bob.lailfamily@gmail.com"]
-  s.homepage     = "http://github.com/boblail/Pericope"
-  s.summary      = "Parses Bible references"
-  # s.description  = "Epic automates administrative tasks for Emerging Products"
+  s.homepage     = "http://github.com/boblail/pericope"
+  s.summary      = "Pericope is a gem for parsing Bible references."
+  s.description  = "It recognizes common abbreviations and misspellings for names of the books of the Bible and a variety of ways of denoting ranges of chapters and verses. It can parse pericopes singly or out of a block of text. It's useful for comparing two pericopes for intersection and normalizing them into a well-formatted string."
                    
   s.required_rubygems_version = ">= 1.3.6"
   s.add_dependency "activesupport"
