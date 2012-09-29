@@ -16,11 +16,7 @@ class Pericope
   end
   
   def self.book_name_regexes
-    @@book_name_regexes ||= begin
-      book_abbreviations.map do |book|
-        [book, Regexp.new("\\b#{book[1]}\\b.? (#{ValidReference})", true)]
-      end
-    end
+    @book_name_regexes ||= book_abbreviations.map { |book_number, book_regex| [book_number, /\b#{book_regex}\b/] }
   end
   
   
@@ -33,7 +29,7 @@ class Pericope
       
       @original_string = match.to_s
       set_book match.instance_variable_get('@book')
-      @ranges = parse_reference(match[1])
+      @ranges = parse_reference(match[2])
       
     when Array
       set_book Pericope.get_book(string_or_array.first)
@@ -360,28 +356,31 @@ private
   
   
   # matches all valid Bible references in the supplied string
-  # ! will not necessarily return references in order !
   def self.match_all(text)
     matches = []
-    unmatched = text
     
-    for book_regex in book_name_regexes
-      rx = book_regex[1]
-      while (match = unmatched.match rx) # find all occurrences of pericopes in this book
-        length = match.end(0) - match.begin(0)
-        
-        # after matching "2 Peter" don't match "Peter" again as "1 Peter"
-        # but keep the same number of characters in the string so indices work
-        unmatched = match.pre_match + ("*" * length) + match.post_match
-        match.instance_variable_set('@book', book_regex[0][0])
-        if block_given?
-          yield match
-        else
-          matches << match
-        end
+    text.scan(Pericope::PERICOPE_PATTERN) do
+      match = Regexp.last_match
+      
+      book = recognize_book(match[1])
+      next unless book
+      
+      match.instance_variable_set('@book', book)
+      if block_given?
+        yield match
+      else
+        matches << match
       end
     end
     block_given? ? text : matches
+  end
+  
+  def self.recognize_book(book)
+    book = book.to_s.downcase
+    book_name_regexes.each do |book_regex|
+      return book_regex[0] if book =~ book_regex[1]
+    end
+    nil
   end
   
   
@@ -458,7 +457,7 @@ private
         end
       end
     end
-    book_abbreviations
+    Hash[book_abbreviations]
   end
   
   
@@ -546,7 +545,12 @@ private
       22]       # Revelation      66
   end
   
-  ValidReference = '((\s*\d{1,3})(\s*[:\"\.]\s*\d{1,3}(a|b)?(\s*(,|;)\s*(\d{1,3}[:\"\.])?\s*\d{1,3}(a|b)?)*)?(\s*(-|–|—)\s*(\d{1,3}\s*[:\"\.])?(\d{1,3}(a|b)?)(\s*(,|;)\s*(\d{1,3}\s*[:\"\.])?\s*\d{1,3}(a|b)?)*)*)'
+  
+  BOOK_PATTERN = /\b(?:(?:1|2|3|i+|first|second|third|1st|2nd|3rd) )?(?:\w+| of )\b/
+  
+  REFERENCE_PATTERN = '((\s*\d{1,3})(\s*[:\"\.]\s*\d{1,3}(a|b)?(\s*(,|;)\s*(\d{1,3}[:\"\.])?\s*\d{1,3}(a|b)?)*)?(\s*(-|–|—)\s*(\d{1,3}\s*[:\"\.])?(\d{1,3}(a|b)?)(\s*(,|;)\s*(\d{1,3}\s*[:\"\.])?\s*\d{1,3}(a|b)?)*)*)'
+  
+  PERICOPE_PATTERN = /(#{BOOK_PATTERN})\.? (#{REFERENCE_PATTERN})/i
   
   
   

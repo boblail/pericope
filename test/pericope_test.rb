@@ -23,6 +23,31 @@ class PericopeTest < ActiveSupport::TestCase
   
   
   
+  test "valid book references" do
+    tests = [
+      "ii samuel",
+      "1 cor.",
+      "jas",
+      "song of songs",
+      "song of solomon",
+      "first kings",
+      "3rd jn",
+      "phil"
+    ]
+    
+    tests.each do |test|
+      assert_match Pericope::BOOK_PATTERN, test
+    end
+  end
+  
+  
+  
+  test "PERICOPE_PATTERN" do
+    assert_equal nil, "Cross, 1" =~ Pericope::PERICOPE_PATTERN, "\"Cross, 1\" should not be matched as a pericope!"
+  end
+  
+  
+  
   test "parsing single pericopes" do
     tests = {
       # test basic parsing
