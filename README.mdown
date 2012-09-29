@@ -22,6 +22,7 @@ See `pericope_test.rb` for examples of usage.
 # 0.6.0
 
  - Removed the `index` attribute
+ - Deprecated the `pattern` argument to the method `Pericope.split(text, pattern=nil)`
 
 
 # License

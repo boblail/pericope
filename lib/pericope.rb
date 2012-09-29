@@ -21,26 +21,34 @@ class Pericope
   
   
   
-  def initialize(string_or_array)
-    case string_or_array
-    when String, MatchData
-      match = string_or_array.is_a?(String) ? Pericope.match_one(string_or_array) : string_or_array
-      raise "no pericope found in #{string_or_array} (#{string_or_array.class})" if match.nil?
+  def initialize(arg)
+    case arg
+    when String
+      attributes = Pericope.match_one(arg)
+      raise "no pericope found in #{arg} (#{arg.class})" if attributes.nil?
       
-      @original_string = match.to_s
-      set_book match.instance_variable_get('@book')
-      @ranges = parse_reference(match[2])
+      @original_string = attributes[:original_string]
+      set_book attributes[:book]
+      @ranges = attributes[:ranges]
       
     when Array
-      set_book Pericope.get_book(string_or_array.first)
-      @ranges = Pericope.group_array_into_ranges(string_or_array)
+      set_book Pericope.get_book(arg.first)
+      @ranges = Pericope.group_array_into_ranges(arg)
       
     else
-      raise ArgumentError, "#{string_or_array.class} is not a recognized input for pericope"
+      attributes = arg
+      @original_string = attributes[:original_string]
+      set_book attributes[:book]
+      @ranges = attributes[:ranges]
+      
     end
   end
   
   
+  
+  def self.book_has_chapters?(book)
+    book_chapter_counts[book - 1] > 1
+  end
   
   def book_has_chapters?
     (book_chapter_count > 1)
@@ -51,15 +59,18 @@ class Pericope
   # Differs from Pericope.new in that it won't raise an exception
   # if text does not contain a pericope but will return nil instead.
   def self.parse_one(text)
-    Pericope.new(text) rescue nil
+    parse(text) do |pericope|
+      return pericope
+    end
+    nil
   end
   
   
   
   def self.parse(text)
     pericopes = []
-    match_all text do |match|
-      pericope = Pericope.new(match)
+    match_all(text) do |attributes|
+      pericope = Pericope.new(attributes)
       if block_given?
         yield pericope
       else
@@ -72,21 +83,45 @@ class Pericope
   
   
   def self.split(text, pattern=nil)
-    matches = match_all(text) # find every pericope in the text
-    matches = matches.sort {|a,b| a.begin(0) <=> b.begin(0)} # put them in the order of their occurrence
-    
+    puts "DEPRECATION NOTICE: split will no longer accept a 'pattern' argument in Pericope 0.7.0" if pattern
     segments = []
     start = 0
-    for match in matches
+    
+    match_all(text) do |attributes, match|
+      
       pretext = text.slice(start...match.begin(0))
-      segments.concat(pattern ? pretext.split(pattern).delete_if{|s| s.length==0} : [pretext]) if (pretext.length>0)
-      segments << Pericope.new(match)
+      if pretext.length > 0
+        segments << pretext
+        yield pretext if block_given?
+      end
+      
+      pericope = Pericope.new(attributes)
+      segments << pericope
+      yield pericope if block_given?
+      
       start = match.end(0)
     end
-    pretext = text.slice(start...text.length)
-    segments.concat(pattern ? pretext.split(pattern).delete_if{|s| s.length==0} : [pretext]) if (pretext.length>0)
     
+    pretext = text.slice(start...text.length)
+    if pretext.length > 0
+      segments << pretext
+      yield pretext if block_given?
+    end
+    
+    segments = ___split_segments_by_pattern(segments, pattern) if pattern
     segments
+  end
+  
+  def self.___split_segments_by_pattern(segments, pattern)
+    segments2 = []
+    segments.each do |segment|
+      if segment.is_a? Pericope
+        segments2 << segment
+      else
+        segments2.concat(segment.split(pattern))
+      end
+    end
+    segments2
   end
   
   
@@ -242,21 +277,6 @@ private
   
   
   
-  def parse_reference(reference)
-    reference = normalize_reference(reference)
-    (reference.nil? || reference.empty?) ? [] : parse_ranges(reference.split(/[,;]/))
-  end
-  
-  def normalize_reference(reference)
-    [ [%r{(\d+)[".](\d+)},'\1:\2'],       # 12"5 and 12.5 -> 12:5
-      [%r{(–|—)},'-'],                     # convert em dash and en dash to -
-      [%r{[^0-9,:;\-–—]},'']              # remove everything but [0-9,;:-]
-    ].each { |pattern, replacement| reference.gsub!(pattern, replacement) }
-    reference
-  end
-  
-  
-  
   def self.get_first_verse(book, chapter)
     get_id(book, chapter, 1)
   end
@@ -347,8 +367,8 @@ private
   
   # matches the first valid Bible reference in the supplied string
   def self.match_one(text)
-    match_all(text) do |match|
-      return match
+    match_all(text) do |attributes|
+      return attributes
     end
     nil
   end
@@ -357,22 +377,23 @@ private
   
   # matches all valid Bible references in the supplied string
   def self.match_all(text)
-    matches = []
-    
     text.scan(Pericope::PERICOPE_PATTERN) do
       match = Regexp.last_match
       
       book = recognize_book(match[1])
       next unless book
       
-      match.instance_variable_set('@book', book)
-      if block_given?
-        yield match
-      else
-        matches << match
-      end
+      ranges = parse_reference(book, match[2])
+      next if ranges.empty?
+      
+      attributes = {
+        :original_string => match.to_s,
+        :book => book,
+        :ranges => ranges
+      }
+      
+      yield attributes, match
     end
-    block_given? ? text : matches
   end
   
   def self.recognize_book(book)
@@ -383,11 +404,22 @@ private
     nil
   end
   
+  def self.parse_reference(book, reference)
+    reference = normalize_reference(reference)
+    (reference.nil? || reference.empty?) ? [] : parse_ranges(book, reference.split(/[,;]/))
+  end
   
+  def self.normalize_reference(reference)
+    [ [%r{(\d+)[".](\d+)},'\1:\2'],       # 12"5 and 12.5 -> 12:5
+      [%r{(–|—)},'-'],                     # convert em dash and en dash to -
+      [%r{[^0-9,:;\-–—]},'']              # remove everything but [0-9,;:-]
+    ].each { |pattern, replacement| reference.gsub!(pattern, replacement) }
+    reference
+  end
   
-  def parse_ranges(ranges)
+  def self.parse_ranges(book, ranges)
     recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
-    recent_chapter = 1 if !self.book_has_chapters?
+    recent_chapter = 1 if !book_has_chapters?(book)
     ranges.map do |range|
       range = range.split('-') # parse the low end of a verse range and the high end separately
       range << range[0] if (range.length < 2) # treat 12:4 as 12:4-12:4
