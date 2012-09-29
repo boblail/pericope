@@ -196,7 +196,9 @@ class PericopeTest < ActiveSupport::TestCase
     # Convert pericopes to strings.
     # Remove leading and trailing whitespace.
     # Remove segments that consisted only of whitespace.
-    keywords = Pericope.split(text, ",").map {|s| s.to_s.strip}.delete_if{|s| s.length==0}
+    keywords = (Pericope.to_enum(:split, text).map { |arg|
+      arg.is_a?(Pericope) ? arg.to_s : arg.split(",").map(&:strip).reject(&:empty?)
+    }).flatten
     assert_equal expected_keywords, keywords
   end
   
