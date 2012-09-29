@@ -12,7 +12,7 @@ class Pericope
   
   
   def self.book_names
-    @@book_names ||= ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalm", "Proverbs", "Ecclesiastes", "Song of Songs", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel",  "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John ", "2 John", "3 John", "Jude", "Revelation"]
+    @book_names ||= ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalm", "Proverbs", "Ecclesiastes", "Song of Songs", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel",  "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John ", "2 John", "3 John", "Jude", "Revelation"]
   end
   
   def self.book_name_regexes
@@ -51,7 +51,7 @@ class Pericope
   end
   
   def book_has_chapters?
-    (book_chapter_count > 1)
+    book_chapter_count > 1
   end
   
   
@@ -179,10 +179,10 @@ class Pericope
   def to_a
     # one range per chapter
     chapter_ranges = []
-    for range in ranges
+    ranges.each do |range|
       min_chapter = Pericope.get_chapter(range.min)
       max_chapter = Pericope.get_chapter(range.max)
-      if (min_chapter==max_chapter)
+      if min_chapter == max_chapter
         chapter_ranges << range
       else
         chapter_ranges << Range.new(range.min, Pericope.get_last_verse(book, min_chapter))
@@ -244,12 +244,14 @@ class Pericope
   def intersects?(pericope)
     return false unless pericope.is_a?(Pericope)
     return false unless (self.book == pericope.book)
-    for self_range in self.ranges
-      for other_range in pericope.ranges
+    
+    self.ranges.each do |self_range|
+      pericope.ranges.each do |other_range|
         return true if (self_range.max >= other_range.min) and (self_range.min <= other_range.max)
       end
     end
-    return false
+    
+    false
   end
   
   
@@ -501,13 +503,13 @@ private
   
   
   def self.book_abbreviations
-    @@book_abbreviations ||= load_book_abbreviations
+    @book_abbreviations ||= load_book_abbreviations
   end
   
   
   
   def self.book_chapter_counts
-    @@book_chapter_counts ||= [
+    @book_chapter_counts ||= [
     # Chapters    Book Name        Book Number
       50,       # Genesis          1
       40,       # Exodus           2
