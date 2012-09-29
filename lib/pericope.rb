@@ -180,18 +180,18 @@ class Pericope
     # one range per chapter
     chapter_ranges = []
     ranges.each do |range|
-      min_chapter = Pericope.get_chapter(range.min)
-      max_chapter = Pericope.get_chapter(range.max)
+      min_chapter = Pericope.get_chapter(range.begin)
+      max_chapter = Pericope.get_chapter(range.end)
       if min_chapter == max_chapter
         chapter_ranges << range
       else
-        chapter_ranges << Range.new(range.min, Pericope.get_last_verse(book, min_chapter))
+        chapter_ranges << Range.new(range.begin, Pericope.get_last_verse(book, min_chapter))
         for chapter in (min_chapter+1)...max_chapter
           chapter_ranges << Range.new(
             Pericope.get_first_verse(book, chapter),
             Pericope.get_last_verse(book, chapter))
         end
-        chapter_ranges << Range.new(Pericope.get_first_verse(book, max_chapter), range.max)
+        chapter_ranges << Range.new(Pericope.get_first_verse(book, max_chapter), range.end)
       end
     end
     
@@ -204,10 +204,10 @@ class Pericope
     recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
     recent_chapter = 1 unless book_has_chapters?
     ranges.map do |range|
-      min_chapter = Pericope.get_chapter(range.min)
-      min_verse = Pericope.get_verse(range.min)
-      max_chapter = Pericope.get_chapter(range.max)
-      max_verse = Pericope.get_verse(range.max)
+      min_chapter = Pericope.get_chapter(range.begin)
+      min_verse = Pericope.get_verse(range.begin)
+      max_chapter = Pericope.get_chapter(range.end)
+      max_verse = Pericope.get_verse(range.end)
       s = ""
       
       if min_verse == 1 and max_verse >= Pericope.get_max_verse(book, max_chapter)
@@ -245,7 +245,7 @@ class Pericope
     
     self.ranges.each do |self_range|
       pericope.ranges.each do |other_range|
-        return true if (self_range.max >= other_range.min) and (self_range.min <= other_range.max)
+        return true if (self_range.end >= other_range.begin) and (self_range.begin <= other_range.end)
       end
     end
     
@@ -425,6 +425,13 @@ private
       range << range[0] if (range.length < 2) # treat 12:4 as 12:4-12:4
       lower_chapter_verse = range[0].split(':').map(&:to_i) # parse "3:28" to [3,28]
       upper_chapter_verse = range[1].split(':').map(&:to_i) # parse "3:28" to [3,28]
+      
+      # treat Mark 3-1 as Mark 3-3 and, eventually, Mark 3:1-35
+      if (lower_chapter_verse.length == 1) &&
+         (upper_chapter_verse.length == 1) &&
+         (upper_chapter_verse[0] < lower_chapter_verse[0])
+        upper_chapter_verse = lower_chapter_verse.dup
+      end
       
       # make sure the low end of the range and the high end of the range
       # are composed of arrays with two appropriate values: [chapter, verse]

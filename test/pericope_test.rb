@@ -111,6 +111,12 @@ class PericopeTest < ActiveSupport::TestCase
   
   
   
+  test "comparing with an invalid pericope" do
+    assert_equal false, Pericope.new("mark 3-1").intersects?(Pericope.new("mark 2:1"))
+  end
+  
+  
+  
   test "formatting pericopes" do
     tests = {
       ["jas 4:7", "james 4:7", "James 4.7", "jas 4 :7", "jas 4: 7"] => "James 4:7",     # test basic formatting
@@ -145,7 +151,8 @@ class PericopeTest < ActiveSupport::TestCase
     tests = {
       ["gen 1:1"] => [1001001],
       ["ps 1"] => [19001001, 19001002, 19001003, 19001004, 19001005, 19001006],
-      ["ps 122:6-124:2"] => [19122006, 19122007, 19122008, 19122009, 19123001, 19123002, 19123003, 19123004, 19124001, 19124002]
+      ["ps 122:6-124:2"] => [19122006, 19122007, 19122008, 19122009, 19123001, 19123002, 19123003, 19123004, 19124001, 19124002],
+      ["Psalm 4-1"] => [19004001, 19004002, 19004003, 19004004, 19004005, 19004006, 19004007, 19004008]
     }
     
     tests.each do |references, expected_result|
@@ -200,7 +207,7 @@ class PericopeTest < ActiveSupport::TestCase
             lacinia. Cras aliquet urna sed massa viverra eget ultricies risus sodales. Maecenas aliquet felis nec
             justo pharetra rutrum eget a risus. (Jas. 1:13, 20) Etiam tincidunt pellentesque cursus. Nulla est libero,
             bibendum sed elementum vitae, elementum vehicula quam. In bibendum massa sed quam convallis sed lacinia
-            orci aliquet. Donec tempus sodales, jn 21:14, zech 4:7, and mt 12:13. Vestibulum nec nibh dolor,
+            orci aliquet. Donec tempus sodales, jn 21:14, zech 4:7, mk 3-1, and mt 12:13. Vestibulum nec nibh dolor,
             vel hendrerit libero. Donec porta felis at lectus condimentum sollicitudin. Donec samuel magna in leo
             vestibulum aliquam. Suspendisse eget magna leo 3\"2-1, in rutrum metus. Pellentesque nec lectus imperdiet
             arcu venenatis placerat in quis diam. Luke 2---Mauris enim sapien, feugiat at vulputate ac, imperdiet sit
@@ -212,7 +219,7 @@ class PericopeTest < ActiveSupport::TestCase
             lacinia. Cras aliquet urna sed massa viverra eget ultricies risus sodales. Maecenas aliquet felis nec
             justo pharetra rutrum eget a risus. () Etiam tincidunt pellentesque cursus. Nulla est libero,
             bibendum sed elementum vitae, elementum vehicula quam. In bibendum massa sed quam convallis sed lacinia
-            orci aliquet. Donec tempus sodales, , , and . Vestibulum nec nibh dolor,
+            orci aliquet. Donec tempus sodales, , , , and . Vestibulum nec nibh dolor,
             vel hendrerit libero. Donec porta felis at lectus condimentum sollicitudin. Donec samuel magna in leo
             vestibulum aliquam. Suspendisse eget magna leo 3\"2-1, in rutrum metus. Pellentesque nec lectus imperdiet
             arcu venenatis placerat in quis diam. ---Mauris enim sapien, feugiat at vulputate ac, imperdiet sit
@@ -222,7 +229,7 @@ class PericopeTest < ActiveSupport::TestCase
             dignissim justo consectetur sit amet. ()"
     # trick questions:
     #   Mark            - no reference part
-    #   elit 7. 1-2     - 'elit' is not a book of the Bible    
+    #   elit 7. 1-2     - 'elit' is not a book of the Bible
     #   samuel          - no reference part
     #   leo 3"2-1       - 'leo' is not a book of the Bible
     #   first kings     - no reference part
@@ -231,6 +238,7 @@ class PericopeTest < ActiveSupport::TestCase
       "James 1:13, 20",
       "John 21:14",
       "Zechariah 4:7",
+      "Mark 3", # the reference is mk 3-1. We can't make sense of the "-1" part, but we can of "mk 3"
       "Matthew 12:13",
       "Luke 2",
       "Luke 3:1",
