@@ -1,0 +1,34 @@
+PATH
+  remote: .
+  specs:
+    pericope (0.6.1)
+      activesupport
+
+GEM
+  remote: http://rubygems.org/
+  specs:
+    activesupport (3.2.13)
+      i18n (= 0.6.1)
+      multi_json (~> 1.0)
+    ansi (1.4.3)
+    coderay (1.0.9)
+    i18n (0.6.1)
+    method_source (0.8.1)
+    multi_json (1.7.3)
+    pry (0.9.12.2)
+      coderay (~> 1.0.5)
+      method_source (~> 0.8)
+      slop (~> 3.4)
+    rake (10.0.4)
+    slop (3.4.4)
+    turn (0.9.6)
+      ansi
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  pericope!
+  pry
+  rake
+  turn
