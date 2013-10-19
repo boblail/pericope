@@ -1,5 +1,8 @@
 # Pericope
 
+[![Build Status](https://travis-ci.org/boblail/pericope.png?branch=master)](https://travis-ci.org/boblail/pericope)
+
+
 Pericope is a gem for parsing Bible references.
 
 It recognizes common abbreviations and misspellings for names of the books of the Bible and a variety of ways of denoting ranges of chapters and verses. It can parse pericopes singly or out of a block of text. It's useful for comparing two pericopes for intersection and normalizing them into a well-formatted string.
