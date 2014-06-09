@@ -31,6 +31,7 @@ class Pericope
       @ranges = attributes[:ranges]
       
     when Array
+      arg = arg.map(&:to_i)
       set_book Pericope.get_book(arg.first)
       @ranges = Pericope.group_array_into_ranges(arg)
       
