@@ -11,11 +11,13 @@ class Pericope
   
   
   def self.book_names
-    @book_names ||= ["Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalm", "Proverbs", "Ecclesiastes", "Song of Songs", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel",  "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John ", "2 John", "3 John", "Jude", "Revelation"]
+    @book_names ||= chapter_verse_count_books.
+      map{ |r| r[2] }.uniq
   end
   
   def self.book_name_regexes
-    @book_name_regexes ||= book_abbreviations.map { |book_number, book_regex| [book_number, /\b#{book_regex}\b/] }
+    @book_name_regexes ||= book_abbreviations.
+      map { |book_number, book_regex| [book_number, /\b#{book_regex}\b/] }
   end
   
   
@@ -471,15 +473,17 @@ private
   
   
   
-  def self.load_chapter_verse_counts
+  def self.load_chapter_verse_count_books
     path = File.expand_path(File.dirname(__FILE__) + "/../data/chapter_verse_count.txt")
-    chapter_verse_counts = []
-    File.open(path) do |file|
-      file.each do |text|
-        chapter_verse_counts << text.chomp.split("\t")[0..1].map(&:to_i)
+    [].tap do |data|
+      File.open(path) do |file|
+        file.each do |text|
+          row = text.chomp.split("\t")
+          id, count, book, chapter = row[0].to_i, row[1].to_i, row[2], row[3].to_i
+          data << [id, count, book, chapter]
+        end
       end
     end
-    Hash[chapter_verse_counts]
   end
   
   
@@ -505,8 +509,14 @@ private
   
   
   
+  def self.chapter_verse_count_books
+    @chapter_verse_count_books ||= load_chapter_verse_count_books
+  end
+
+
+
   def self.chapter_verse_counts
-    @chapter_verse_counts ||= load_chapter_verse_counts
+    @chapter_verse_counts ||= Hash[chapter_verse_count_books.map{ |r| [r[0], r[1]] }]
   end
   
   
@@ -518,74 +528,11 @@ private
   
   
   def self.book_chapter_counts
-    @book_chapter_counts ||= [
-    # Chapters    Book Name        Book Number
-      50,       # Genesis          1
-      40,       # Exodus           2
-      27,       # Leviticus        3
-      36,       # Numbers          4
-      34,       # Deuteronomy      5
-      24,       # Joshua           6
-      21,       # Judges           7
-      4,        # Ruth             8
-      31,       # 1 Samuel         9
-      24,       # 2 Samuel        10
-      22,       # 1 Kings         11
-      25,       # 2 Kings         12
-      29,       # 1 Chronicles    13
-      36,       # 2 Chronicles    14
-      10,       # Ezra            15
-      13,       # Nehemiah        16
-      10,       # Esther          17
-      42,       # Job             18
-      150,      # Psalm           19
-      31,       # Proverbs        20
-      12,       # Ecclesiastes    21
-      8,        # Song of Songs   22
-      66,       # Isaiah          23
-      52,       # Jeremiah        24
-      5,        # Lamentations    25
-      48,       # Ezekiel         26
-      12,       # Daniel          27
-      14,       # Hosea           28
-      3,        # Joel            29
-      9,        # Amos            30
-      1,        # Obadiah         31
-      4,        # Jonah           32
-      7,        # Micah           33
-      3,        # Nahum           34
-      3,        # Habakkuk        35
-      3,        # Zephaniah       36
-      2,        # Haggai          37
-      14,       # Zechariah       38
-      4,        # Malachi         39
-      28,       # Matthew         40
-      16,       # Mark            41
-      24,       # Luke            42
-      21,       # John            43
-      28,       # Acts            44
-      16,       # Romans          45
-      16,       # 1 Corinthians   46
-      13,       # 2 Corinthians   47
-      6,        # Galatians       48
-      6,        # Ephesians       49
-      4,        # Philippians     50
-      4,        # Colossians      51
-      5,        # 1 Thessalonians 52
-      3,        # 2 Thessalonians 53
-      6,        # 1 Timothy       54
-      4,        # 2 Timothy       55
-      3,        # Titus           56
-      1,        # Philemon        57
-      13,       # Hebrews         58
-      5,        # James           59
-      5,        # 1 Peter         60
-      3,        # 2 Peter         61
-      5,        # 1 John          62
-      1,        # 2 John          63
-      1,        # 3 John          64
-      1,        # Jude            65
-      22]       # Revelation      66
+    @book_chapter_counts ||= chapter_verse_count_books.
+      # Group by book
+      group_by{ |r| r[2] }.
+      # Take the highest chapter number of each book
+      map{ |book, grp| grp.last.last }
   end
   
   
@@ -600,7 +547,4 @@ private
     [/[–—]/,           '-'],     # convert em dash and en dash to -
     [/[^0-9,:;\-–—]/,  '']       # remove everything but [0-9,;:-]
   ]
-  
-  
-  
 end
