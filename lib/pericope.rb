@@ -10,9 +10,10 @@ class Pericope
               :ranges
   
   
+  
   def self.book_names
-    @book_names ||= chapter_verse_count_books.
-      map{ |r| r[2] }.uniq
+    load_chapter_verse_count_books! unless defined?(@book_names)
+    @book_names
   end
   
   def self.book_name_regexes
@@ -473,22 +474,40 @@ private
   
   
   
-  def self.load_chapter_verse_count_books
+  def self.load_chapter_verse_count_books!
+    current_book_name = nil
+    chapters = 0
+    @book_names = []
+    @chapter_verse_counts = {}
+    @book_chapter_counts = []
+    
     path = File.expand_path(File.dirname(__FILE__) + "/../data/chapter_verse_count.txt")
-    [].tap do |data|
-      File.open(path) do |file|
-        file.each do |text|
-          row = text.chomp.split("\t")
-          id, count, book, chapter = row[0].to_i, row[1].to_i, row[2], row[3].to_i
-          data << [id, count, book, chapter]
+    File.open(path) do |file|
+      file.each do |text|
+        row = text.chomp.split("\t")
+        id, verses, book_name = row[0].to_i, row[1].to_i, row[2]
+        
+        @chapter_verse_counts[id] = verses
+        
+        unless current_book_name == book_name
+          if current_book_name
+            @book_names.push current_book_name
+            @book_chapter_counts.push chapters
+          end
+          current_book_name = book_name
         end
+        
+        chapters = get_chapter(id)
       end
     end
+    
+    @book_names.push current_book_name
+    @book_chapter_counts.push chapters
   end
   
   
   
-  def self.load_book_abbreviations
+  def self.load_book_abbreviations!
     path = File.expand_path(File.dirname(__FILE__) + "/../data/book_abbreviations.txt")
     book_abbreviations = []
     File.open(path) do |file|
@@ -509,30 +528,22 @@ private
   
   
   
-  def self.chapter_verse_count_books
-    @chapter_verse_count_books ||= load_chapter_verse_count_books
-  end
-
-
-
   def self.chapter_verse_counts
-    @chapter_verse_counts ||= Hash[chapter_verse_count_books.map{ |r| [r[0], r[1]] }]
+    load_chapter_verse_count_books! unless defined?(@chapter_verse_counts)
+    @chapter_verse_counts
   end
   
   
   
   def self.book_abbreviations
-    @book_abbreviations ||= load_book_abbreviations
+    @book_abbreviations ||= load_book_abbreviations!
   end
   
   
   
   def self.book_chapter_counts
-    @book_chapter_counts ||= chapter_verse_count_books.
-      # Group by book
-      group_by{ |r| r[2] }.
-      # Take the highest chapter number of each book
-      map{ |book, grp| grp.last.last }
+    load_chapter_verse_count_books! unless defined?(@book_chapter_counts)
+    @book_chapter_counts
   end
   
   
