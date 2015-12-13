@@ -3,13 +3,13 @@ require 'cli/base'
 
 class Pericope
   class CLI
-    
-    
-    
+
+
+
     ALLOWED_COMMANDS = %w{help normalize parse substitute reverse-substitute usage}
-    
-    
-    
+
+
+
     def self.run(command, *args)
       if ALLOWED_COMMANDS.member?(command)
         command = command.gsub(/-/, '_').to_sym
@@ -18,22 +18,22 @@ class Pericope
         CLI.new(*args).usage
       end
     end
-    
-    
-    
+
+
+
     def help
       print <<-HELP
 
 Glossary
 
   pericope        A Bible reference (e.g. Romans 3:6-11)
-  verse ID        An integer that uniquely identifies a Bible verse      
+  verse ID        An integer that uniquely identifies a Bible verse
 
       HELP
     end
-    
-    
-    
+
+
+
     def normalize
       begin
         pericope = Pericope.new(input)
@@ -42,9 +42,9 @@ Glossary
         print $!.to_s
       end
     end
-    
-    
-    
+
+
+
     def parse
       begin
         pericope = Pericope.new(input)
@@ -53,9 +53,9 @@ Glossary
         print $!.to_s
       end
     end
-    
-    
-    
+
+
+
     def substitute
       begin
         print Pericope.sub(input)
@@ -63,9 +63,9 @@ Glossary
         print $!.to_s
       end
     end
-    
-    
-    
+
+
+
     def reverse_substitute
       begin
         print Pericope.rsub(input)
@@ -73,9 +73,9 @@ Glossary
         print $!.to_s
       end
     end
-    
-    
-    
+
+
+
     def usage
       print <<-USAGE
 
@@ -94,30 +94,30 @@ Commands
 
       USAGE
     end
-    
-    
-    
+
+
+
   private
-    
-    
-    
+
+
+
     def initialize(*args)
       @options = extract_options!(*args)
       @input = args.first
       @input = $stdin.read if $stdin.stat.pipe?
     end
-    
-    
-    
+
+
+
     attr_reader :options, :input
-    
-    
-    
+
+
+
     def extract_options!(*args)
       {} # No options accepted yet
     end
-    
-    
-    
+
+
+
   end
 end
