@@ -1,20 +1,17 @@
-# encoding: UTF-8
+require "test_helper"
 
-require 'test_helper'
-require 'pericope'
-
-class PericopeTest < ActiveSupport::TestCase
+class PericopeTest < Minitest::Test
 
 
 
-  test "get_max_verse" do
+  def test_get_max_verse
     assert_equal 29, Pericope.get_max_verse(1, 9)
     assert_equal 26, Pericope.get_max_verse(1, 50)
   end
 
 
 
-  test "parsing a pericope of just chapters" do
+  def test_parsing_a_pericope_of_just_chapters
     pericope = Pericope.new('ps 1-8')
     assert_equal 'Psalm', pericope.book_name
     assert_equal 150, pericope.book_chapter_count
@@ -23,7 +20,7 @@ class PericopeTest < ActiveSupport::TestCase
 
 
 
-  test "valid book references" do
+  def test_valid_book_references
     tests = [
       "ii samuel",
       "1 cor.",
@@ -42,13 +39,13 @@ class PericopeTest < ActiveSupport::TestCase
 
 
 
-  test "PERICOPE_PATTERN" do
+  def test_PERICOPE_PATTERN
     assert_equal nil, "Cross, 1" =~ Pericope::PERICOPE_PATTERN, "\"Cross, 1\" should not be matched as a pericope!"
   end
 
 
 
-  test "parsing single pericopes" do
+  def test_parsing_single_pericopes
     tests = {
       # test basic parsing
       ["gen 1", "gen. 1", "Genesis 1", "gen 1:1-999"] => [1001001..1001031],
@@ -91,7 +88,7 @@ class PericopeTest < ActiveSupport::TestCase
 
 
 
-  test "comparing pericopes" do
+  def test_comparing_pericopes
     tests = [
       ["exodus 12", "exodus 12:3-13", "exodus 12:5"],    # basic intersection
       ["3 jn 4-8", "3 jn 7:1-7", "3 jn 5"],              # intersection in a book with no chapters
@@ -111,13 +108,13 @@ class PericopeTest < ActiveSupport::TestCase
 
 
 
-  test "comparing with an invalid pericope" do
+  def test_comparing_with_an_invalid_pericope
     assert_equal false, Pericope.new("mark 3-1").intersects?(Pericope.new("mark 2:1"))
   end
 
 
 
-  test "formatting pericopes" do
+  def test_formatting_pericopes
     tests = {
       ["jas 4:7", "james 4:7", "James 4.7", "jas 4 :7", "jas 4: 7"] => "James 4:7",     # test basic formatting
       ["2 sam 7", "iisam 7", "second samuel 7", "2sa 7", "2 sam. 7"] => "2 Samuel 7",   # test chapter range formatting
@@ -147,7 +144,7 @@ class PericopeTest < ActiveSupport::TestCase
 
 
 
-  test "converting pericopes to arrays" do
+  def test_converting_pericopes_to_arrays
     tests = {
       ["gen 1:1"] => [1001001],
       ["ps 1"] => [19001001, 19001002, 19001003, 19001004, 19001005, 19001006],
@@ -165,7 +162,7 @@ class PericopeTest < ActiveSupport::TestCase
 
 
 
-  test "converting arrays to pericopes" do
+  def test_converting_arrays_to_pericopes
     tests = {
       "Genesis 1:1" => [1001001],
       "John 20:19-23" => [43020019, 43020020, 43020021, 43020022, 43020023],
@@ -181,7 +178,7 @@ class PericopeTest < ActiveSupport::TestCase
 
 
 
-  test "splitting text with pericopes" do
+  def test_splitting_text_with_pericopes
     text = "Paul, rom. 12:1-4, Romans 9:7, 11, Election, Theology of Glory, Theology of the Cross, 1 Cor 15, Resurrection"
     expected_keywords = [
       "Paul",
@@ -204,7 +201,7 @@ class PericopeTest < ActiveSupport::TestCase
 
 
 
-  test "pericope extraction" do
+  def test_pericope_extraction
     text =  "2 Peter 4.1 Lorem ipsum dolor sit amet, Mark consectetur adipiscing elit 7. 1-2 Donec aliquam erat luctus
             lacinia. Cras aliquet urna sed massa viverra eget ultricies risus sodales. Maecenas aliquet felis nec
             justo pharetra rutrum eget a risus. (Jas. 1:13, 20) Etiam tincidunt pellentesque cursus. Nulla est libero,
@@ -263,7 +260,7 @@ class PericopeTest < ActiveSupport::TestCase
 
 
 
-  test "pericope substitution" do
+  def test_pericope_substitution
     text =  "2 Peter 3:1-2 Lorem ipsum dolor sit amet"
     expected_text = "{{61003001 61003002}} Lorem ipsum dolor sit amet"
     actual_text = Pericope.sub(text)
@@ -277,6 +274,8 @@ class PericopeTest < ActiveSupport::TestCase
 
 
 end
+
+
 
 at_exit do
   require 'benchmark'

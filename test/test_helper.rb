@@ -1,7 +1,7 @@
-require 'rubygems'
-require 'test/unit'
-require 'turn'
-require 'pry'
-require 'active_support'
-require 'active_support/test_case'
-require 'pericope'
+$LOAD_PATH.unshift File.expand_path("../../lib", __FILE__)
+require "pericope"
+
+require "minitest/reporters/turn_reporter"
+MiniTest::Reporters.use! Minitest::Reporters::TurnReporter.new
+
+require "minitest/autorun"
