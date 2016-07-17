@@ -1,3 +1,3 @@
 class Pericope
-  VERSION = "0.6.2" unless defined?(::Pericope::Version)
+  VERSION = "0.6.3" unless defined?(::Pericope::Version)
 end
