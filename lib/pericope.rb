@@ -539,11 +539,11 @@ private
   end
 
 
-  BOOK_PATTERN = /\b(?:(?:1|2|3|i+|first|second|third|1st|2nd|3rd) )?(?:\w+| of )\b/
+  BOOK_PATTERN = /\b(?:(?:1|2|3|i+|first|second|third|1st|2nd|3rd) )?(?:\w+| of )/
 
   REFERENCE_PATTERN = '(?:\s*\d{1,3})(?:\s*[:\"\.]\s*\d{1,3}[ab]?(?:\s*[,;]\s*(?:\d{1,3}[:\"\.])?\s*\d{1,3}[ab]?)*)?(?:\s*[-–—]\s*(?:\d{1,3}\s*[:\"\.])?(?:\d{1,3}[ab]?)(?:\s*[,;]\s*(?:\d{1,3}\s*[:\"\.])?\s*\d{1,3}[ab]?)*)*'
 
-  PERICOPE_PATTERN = /(#{BOOK_PATTERN})\.? (#{REFERENCE_PATTERN})/i
+  PERICOPE_PATTERN = /(#{BOOK_PATTERN})\.?(#{REFERENCE_PATTERN})/i
 
   NORMALIZATIONS = [
     [/(\d+)[".](\d+)/, '\1:\2'], # 12"5 and 12.5 -> 12:5

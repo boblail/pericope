@@ -53,6 +53,8 @@ class PericopeTest < Minitest::Test
       ["jn 12:1-13:8"] => [43012001..43013008],
       ["ipet 1:1", "first peter 1:1", "1pete 1:1", "1 pet. 1.1"] => [60001001..60001001],
       ["ps 1-8"] => [19001001..19008009],
+      ["ps1"] => [19001001..19001006],
+      ["mt4:15"] => [40004015..40004015],
 
       # test that 'a' and 'b' parts of verses are ignored
       ["mal 2:6a-9b", "mal 2:6-9"] => [39002006..39002009],
@@ -78,9 +80,9 @@ class PericopeTest < Minitest::Test
     tests.each do |references, ranges|
       for reference in references
         pericope = Pericope.new(reference)
-        assert_equal pericope.ranges.length, ranges.length,   "There should be only #{ranges.length} ranges for \"#{reference}\"."
+        assert_equal ranges.length, pericope.ranges.length, "There should be only #{ranges.length} ranges for \"#{reference}\"."
         for i in 0...ranges.length
-          assert_equal pericope.ranges[i], ranges[i],         "Failure parsing \"#{reference}\": expected #{ranges[i]}, got #{pericope.ranges[i]}."
+          assert_equal ranges[i], pericope.ranges[i], "Failure parsing \"#{reference}\": expected #{ranges[i]}, got #{pericope.ranges[i]}."
         end
       end
     end
