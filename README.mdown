@@ -1,7 +1,8 @@
 # Pericope
 
-[![Build Status](https://travis-ci.org/boblail/pericope.png?branch=master)](https://travis-ci.org/boblail/pericope)
-[![Code Climate](https://codeclimate.com/github/boblail/pericope.png)](https://codeclimate.com/github/boblail/pericope)
+[![Gem Version](https://badge.fury.io/rb/pericope.svg)](https://rubygems.org/gems/pericope)
+[![Code Climate](https://codeclimate.com/github/boblail/pericope.svg)](https://codeclimate.com/github/boblail/pericope)
+[![Build Status](https://travis-ci.org/boblail/pericope.svg)](https://travis-ci.org/boblail/pericope)
 
 Pericope is a gem for parsing Bible references.
 
