@@ -38,6 +38,10 @@ class Pericope
       set_book Pericope.get_book(arg.first)
       @ranges = Pericope.group_array_into_ranges(arg)
 
+    when Range
+      set_book Pericope.get_book(arg.begin)
+      @ranges = [arg]
+
     else
       attributes = arg
       @original_string = attributes[:original_string]
