@@ -27,19 +27,19 @@ class PericopeTest < Minitest::Test
 
 
   def test_valid_book_references
-    tests = [
-      "ii samuel",
-      "1 cor.",
-      "jas",
-      "song of songs",
-      "song of solomon",
-      "first kings",
-      "3rd jn",
-      "phil"
-    ]
+    tests = {
+      "ii samuel" => "ii samuel",
+      "1 cor." => "1 cor",
+      "jas" => "jas",
+      "song of songs" => "song of songs",
+      "song of solomon" => "song of solomon",
+      "first kings" => "first kings",
+      "3rd jn" => "3rd jn",
+      "phil" => "phil"
+    }
 
-    tests.each do |test|
-      assert_match Pericope::BOOK_PATTERN, test
+    tests.each do |input, expected_match|
+      assert_equal expected_match, input[Pericope::BOOK_PATTERN]
     end
   end
 
