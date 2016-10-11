@@ -126,12 +126,13 @@ class PericopeTest < Minitest::Test
     tests = {
       ["jas 4:7", "james 4:7", "James 4.7", "jas 4 :7", "jas 4: 7"] => "James 4:7",     # test basic formatting
       ["2 sam 7", "iisam 7", "second samuel 7", "2sa 7", "2 sam. 7"] => "2 Samuel 7",   # test chapter range formatting
-      ["philemon 8-10", "philemon 6:8-10"] => "Philemon 8-10",                          # test book with no chapters
-      ["phil 1:1-17,2:3-5,17"] => "Philippians 1:1-17, 2:3-5, 17",                      # test comma-separated ranges
+      ["philemon 8-10", "philemon 6:8-10"] => "Philemon 8–10",                          # test book with no chapters
+      ["phil 1:1-17,2:3-5,17"] => "Philippians 1:1–17; 2:3–5, 17",                      # test comma-separated ranges
 
       # test the values embedded in the pericope extraction
-      ["Psalm 37:3–7a, 23–24, 39–40"] => "Psalm 37:3-7, 23-24, 39-40",
-      ["John 20:19–23"] => "John 20:19-23",
+      ["Psalm 37:3–7a, 23–24, 39–40"] => "Psalm 37:3–7, 23–24, 39–40",
+      ["John 20:19–23"] => "John 20:19–23",
+      ["ex 2-3"] => "Exodus 2—3",
       ["2 Peter 4.1 "] => "2 Peter 3:1", # nb: chapter coercion
       ["(Jas. 1:13, 20) "] => "James 1:13, 20",
       ["jn 21:14, "] => "John 21:14",
@@ -139,16 +140,41 @@ class PericopeTest < Minitest::Test
       ["mt 12:13. "] => "Matthew 12:13",
       ["Luke 2---Maris "] => "Luke 2",
       ["Luke 3\"1---Aliquam "] => "Luke 3:1",
-      ["(Acts 13:4-20)"] => "Acts 13:4-20"
+      ["(Acts 13:4-20)"] => "Acts 13:4–20"
     }
 
     tests.each do |references, expected_result|
       pericopes = references.map {|reference| Pericope.new(reference)}
       for pericope in pericopes
-        assert_equal pericope.to_s, expected_result,      "Formatting failure: expected #{pericope.original_string} to become #{expected_result}, not #{pericope.to_s}."
+        assert_equal expected_result, pericope.to_s, "Formatting failure: expected #{pericope.original_string} to become #{expected_result}, not #{pericope.to_s}."
       end
     end
   end
+
+
+
+  def test_verse_range_separator
+    assert_equal "John 1:1_7", Pericope.new("john 1:1-7").to_s(verse_range_separator: "_")
+  end
+
+  def test_chapter_range_separator
+    assert_equal "John 1_3", Pericope.new("john 1-3").to_s(chapter_range_separator: "_")
+  end
+
+  def test_verse_list_separator
+    assert_equal "John 1:1_3", Pericope.new("john 1:1, 3").to_s(verse_list_separator: "_")
+  end
+
+  def test_chapter_list_separator
+    assert_equal "John 1:1_3:1", Pericope.new("john 1:1, 3:1").to_s(chapter_list_separator: "_")
+  end
+
+  def test_always_print_verse_range
+    assert_equal "John 1", Pericope.new("john 1").to_s(always_print_verse_range: false)
+    assert_equal "John 1:1–51", Pericope.new("john 1").to_s(always_print_verse_range: true)
+  end
+
+  # TODO: fix Pericope.new("john 1, 3") # <-- not finding chapter 3
 
 
 
@@ -173,9 +199,9 @@ class PericopeTest < Minitest::Test
   def test_converting_arrays_to_pericopes
     tests = {
       "Genesis 1:1" => [1001001],
-      "John 20:19-23" => [43020019, 43020020, 43020021, 43020022, 43020023],
+      "John 20:19–23" => [43020019, 43020020, 43020021, 43020022, 43020023],
       "Psalm 1" => [19001001, 19001002, 19001003, 19001004, 19001005, 19001006],
-      "Psalm 122:6-124:2" => [19122006, 19122007, 19122008, 19122009, 19123001, 19123002, 19123003, 19123004, 19124001, 19124002]
+      "Psalm 122:6—124:2" => [19122006, 19122007, 19122008, 19122009, 19123001, 19123002, 19123003, 19123004, 19124001, 19124002]
     }
 
     tests.each do |expected_result, array|
@@ -190,7 +216,7 @@ class PericopeTest < Minitest::Test
     text = "Paul, rom. 12:1-4, Romans 9:7, 11, Election, Theology of Glory, Theology of the Cross, 1 Cor 15, Resurrection"
     expected_keywords = [
       "Paul",
-      "Romans 12:1-4",
+      "Romans 12:1–4",
       "Romans 9:7, 11",
       "Election",
       "Theology of Glory",
@@ -249,7 +275,7 @@ class PericopeTest < Minitest::Test
       "Matthew 12:13",
       "Luke 2",
       "Luke 3:1",
-      "Acts 13:4-20"
+      "Acts 13:4–20"
     ]
 
     actual_text = ""
@@ -269,7 +295,7 @@ class PericopeTest < Minitest::Test
 
 
   def test_pericope_substitution
-    text =  "2 Peter 3:1-2 Lorem ipsum dolor sit amet"
+    text =  "2 Peter 3:1–2 Lorem ipsum dolor sit amet"
     expected_text = "{{61003001 61003002}} Lorem ipsum dolor sit amet"
     actual_text = Pericope.sub(text)
     assert_equal expected_text, actual_text

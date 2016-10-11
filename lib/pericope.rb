@@ -172,8 +172,8 @@ class Pericope
 
 
 
-  def to_s
-    "#{book_name} #{self.well_formatted_reference}"
+  def to_s(options={})
+    "#{book_name} #{well_formatted_reference(options)}"
   end
 
 
@@ -209,19 +209,34 @@ class Pericope
 
 
 
-  def well_formatted_reference
+  def well_formatted_reference(options={})
     recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
     recent_chapter = 1 unless book_has_chapters?
-    ranges.map do |range|
+
+    verse_range_separator = options.fetch(:verse_range_separator, "–") # en-dash
+    chapter_range_separator = options.fetch(:chapter_range_separator, "—") # em-dash
+    verse_list_separator = options.fetch(:verse_list_separator, ", ")
+    chapter_list_separator = options.fetch(:chapter_list_separator, "; ")
+    always_print_verse_range = options.fetch(:always_print_verse_range, false)
+
+    s = ""
+    ranges.each_with_index do |range, i|
       min_chapter = Pericope.get_chapter(range.begin)
       min_verse = Pericope.get_verse(range.begin)
       max_chapter = Pericope.get_chapter(range.end)
       max_verse = Pericope.get_verse(range.end)
-      s = ""
 
-      if min_verse == 1 and max_verse >= Pericope.get_max_verse(book, max_chapter)
+      if i > 0
+        if recent_chapter == min_chapter
+          s << verse_list_separator
+        else
+          s << chapter_list_separator
+        end
+      end
+
+      if min_verse == 1 && max_verse >= Pericope.get_max_verse(book, max_chapter) && !always_print_verse_range
         s << min_chapter.to_s
-        s << "-#{max_chapter}" if max_chapter > min_chapter
+        s << "#{chapter_range_separator}#{max_chapter}" if max_chapter > min_chapter
       else
         if recent_chapter == min_chapter
           s << min_verse.to_s
@@ -232,18 +247,17 @@ class Pericope
 
         if range.count > 1
 
-          s << "-"
           if min_chapter == max_chapter
-            s << max_verse.to_s
+            s << "#{verse_range_separator}#{max_verse}"
           else
             recent_chapter = max_chapter
-            s << "#{max_chapter}:#{max_verse}"
+            s << "#{chapter_range_separator}#{max_chapter}:#{max_verse}"
           end
         end
       end
+    end
 
-      s
-    end.join(", ")
+    s
   end
 
 
