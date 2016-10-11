@@ -54,7 +54,7 @@ class Pericope
 
 
   def self.book_has_chapters?(book)
-    book_chapter_counts[book - 1] > 1
+    book_chapter_counts[book] > 1
   end
 
   def book_has_chapters?
@@ -269,7 +269,7 @@ class Pericope
   end
 
   def self.get_max_chapter(book)
-    book_chapter_counts[book - 1]
+    book_chapter_counts[book]
   end
 
 
@@ -280,8 +280,8 @@ private
 
   def set_book(value)
     @book = value || raise(ArgumentError, "must specify book")
-    @book_name = Pericope.book_names[@book - 1]
-    @book_chapter_count = Pericope.book_chapter_counts[@book - 1]
+    @book_name = Pericope.book_names[@book]
+    @book_chapter_count = Pericope.book_chapter_counts[@book]
   end
 
 
@@ -482,7 +482,7 @@ private
     current_book_id = nil
     chapters = 0
     @chapter_verse_counts = {}
-    @book_chapter_counts = []
+    @book_chapter_counts = [{}]
 
     path = File.expand_path(File.dirname(__FILE__) + "/../data/chapter_verse_count.txt")
     File.open(path) do |file|
@@ -522,7 +522,7 @@ private
         # as the aforementioned book.
         segments = text.chomp.split("\t")
         book_id = segments.shift.to_i
-        @book_names[book_id - 1] = segments.shift
+        @book_names[book_id] = segments.shift
         @book_name_regexes[book_id] = /\b(?:#{segments.join("|")})\b/
       end
     end
