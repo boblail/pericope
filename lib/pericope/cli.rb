@@ -1,5 +1,5 @@
-require 'pericope'
-require 'cli/base'
+require "pericope"
+require "cli/base"
 
 class Pericope
   class CLI

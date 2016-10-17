@@ -1,6 +1,6 @@
 # encoding: UTF-8
 
-require 'pericope/version'
+require "pericope/version"
 
 class Pericope
   attr_reader :book,

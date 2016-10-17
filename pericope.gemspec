@@ -2,7 +2,7 @@
 lib = File.expand_path('../lib/', __FILE__)
 $:.unshift lib unless $:.include?(lib)
 
-require 'pericope/version'
+require "pericope/version"
 
 Gem::Specification.new do |s|
   s.name         = "pericope"
@@ -15,9 +15,9 @@ Gem::Specification.new do |s|
   s.description  = "It recognizes common abbreviations and misspellings for names of the books of the Bible and a variety of ways of denoting ranges of chapters and verses. It can parse pericopes singly or out of a block of text. It's useful for comparing two pericopes for intersection and normalizing them into a well-formatted string."
 
   s.files        = Dir.glob("{bin,data,lib}/**/*") + %w(README.mdown)
-  s.executables  = ['pericope']
-  s.default_executable = 'pericope'
-  s.require_path = 'lib'
+  s.executables  = ["pericope"]
+  s.default_executable = "pericope"
+  s.require_path = "lib"
 
   s.add_dependency "activesupport"
 

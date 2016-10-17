@@ -312,7 +312,7 @@ end
 
 
 at_exit do
-  require 'benchmark'
+  require "benchmark"
 
   example = "Paul, rom. 12:1-4, Romans 9:7, 11, Election, Theology of Glory, Theology of the Cross, 1 Cor 15, Resurrection"
 
