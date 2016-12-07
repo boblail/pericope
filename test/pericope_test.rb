@@ -307,6 +307,17 @@ class PericopeTest < Minitest::Test
 
 
 
+  def test_pericope_extraction_2
+    expecations = {
+      "This is some text about 1 Cor 1:1" => "1 Corinthians 1:1"
+    }
+    expecations.each do |text, expectation|
+      assert_equal expectation, Pericope.parse_one(text).to_s, "Expected to find #{expectation.inspect} in #{text.inspect}"
+    end
+  end
+
+
+
 end
 
 

@@ -557,11 +557,84 @@ private
   end
 
 
-  BOOK_PATTERN = /\b(?:(?:1|2|3|i+|first|second|third|1st|2nd|3rd) )?\w+(?: of )?\w+/
+  BOOK_PATTERN = %r{\b(?:
+      (?:(?:3|iii|third|3rd)\s*(?:
+        john|joh|jon|jhn|jh|jo|jn
+      ))|
+      (?:(?:2|ii|second|2nd)\s*(?:
+        samuels|samuel|sam|sa|sm|
+        kings|king|kngs|kgs|kg|k|
+        chronicles|chronicle|chron|chrn|chr|
+        john|joh|jon|jhn|jh|jo|jn|
+        corinthians?|cor?|corint?h?|corth|
+        thessalonians?|thes{1,}|the?s?|
+        timothy|tim|tm|ti|
+        peter|pete|pet|ptr|pe|pt|pr
+      ))|
+      (?:(?:1|i|first|1st)\s*(?:
+        samuels|samuel|sam|sa|sm|
+        kings|king|kngs|kgs|kg|k|
+        chronicles|chronicle|chron|chrn|chr|
+        john|joh|jon|jhn|jh|jo|jn|
+        corinthians?|cor?|corint?h?|corth|
+        thessalonians?|thes{1,}|the?s?|
+        timothy|tim|tm|ti|
+        peter|pete|pet|ptr|pe|pt|pr
+      ))|
+      genesis|gen|gn|ge|
+      exodus|exod|exo|exd|ex|
+      leviticus|lev|levi|le|lv|
+      numbers|number|numb|num|nmb|nu|nm|
+      deuteronomy|deut|deu|dt|
+      joshua|josh|jsh|jos|
+      judges|jdgs|judg|jdg|
+      ruth|rut|rth|ru|
+      isaiah|isa|is|ia|isai|isah|
+      ezra|ezr|
+      nehemiah|neh|ne|
+      esther|esth|est|es|
+      job|jb|
+      psalms|psalm|pslms|pslm|psm|psa|ps|
+      proverbs|proverb|prov|prv|prvb|prvbs|pv|
+      ecclesiastes|eccles|eccl|ecc|ecl|
+      (?:the\s?)?song\s?of\s?solomon|(?:the\s?)?song\s?of\s?songs|sn?gs?|songs?|so?s|sol?|son|s\s?of\s?\ss|
+      jeremiah?|jer?|jr|jere|
+      lamentations?|lam?|lm|
+      ezekiel|ezek|eze|ezk|
+      daniel|dan|dn|dl|da|
+      hosea|hos|ho|hs|
+      joel|jl|
+      amos|amo|ams|am|
+      obadiah|obadia|obad|oba|obd|ob|
+      jonah|jon|
+      micah|mica|mic|mi|
+      nahum|nah|nahu|na|
+      habakk?uk|habk?|
+      zephaniah?|ze?ph?|
+      haggai|ha?gg?|
+      zechariah?|ze?ch?|
+      malachi|mal|
+      matthew|matt|mat|ma|mt|
+      mark|mrk|mk|
+      luke|luk|lk|lu|
+      john|joh|jon|jhn|jh|jo|jn|
+      acts|act|ac|
+      romans|roman|roms|rom|rms|ro|rm|
+      galatians|galatian|galat|gala|gal|ga|
+      ephesians?|eph?|ephe?s?|
+      philippians?|phi?l|php|phi|philipp?|
+      colossi?ans?|col?|
+      titus|tit|ti|
+      philemon|phl?mn?|philem?|
+      hebrews|hebrew|heb|
+      james|jam|jas|jm|js|ja|
+      jude|
+      revelations|revelation|revel|rev|rv|re
+  )}ix.freeze
 
   REFERENCE_PATTERN = '(?:\s*\d{1,3})(?:\s*[:\"\.]\s*\d{1,3}[ab]?(?:\s*[,;]\s*(?:\d{1,3}[:\"\.])?\s*\d{1,3}[ab]?)*)?(?:\s*[-–—]\s*(?:\d{1,3}\s*[:\"\.])?(?:\d{1,3}[ab]?)(?:\s*[,;]\s*(?:\d{1,3}\s*[:\"\.])?\s*\d{1,3}[ab]?)*)*'
 
-  PERICOPE_PATTERN = /(#{BOOK_PATTERN})\.?(#{REFERENCE_PATTERN})/i
+  PERICOPE_PATTERN = /(#{BOOK_PATTERN.source.gsub(/[ \n]/, "")})\.?(#{REFERENCE_PATTERN})/i
 
   NORMALIZATIONS = [
     [/(\d+)[".](\d+)/, '\1:\2'], # 12"5 and 12.5 -> 12:5
