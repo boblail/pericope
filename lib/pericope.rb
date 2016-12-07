@@ -1,6 +1,7 @@
 # encoding: UTF-8
 
 require "pericope/version"
+require "pericope/data"
 
 class Pericope
   attr_reader :book,
@@ -9,17 +10,6 @@ class Pericope
               :original_string,
               :ranges
 
-
-
-  def self.book_names
-    load_book_abbreviations! unless defined?(@book_names)
-    @book_names
-  end
-
-  def self.book_name_regexes
-    load_book_abbreviations! unless defined?(@book_name_regexes)
-    @book_name_regexes
-  end
 
 
 
@@ -54,7 +44,7 @@ class Pericope
 
 
   def self.book_has_chapters?(book)
-    book_chapter_counts[book] > 1
+    BOOK_CHAPTER_COUNTS[book] > 1
   end
 
   def book_has_chapters?
@@ -279,11 +269,11 @@ class Pericope
 
   def self.get_max_verse(book, chapter)
     id = (book * 1000000) + (chapter * 1000)
-    chapter_verse_counts[id]
+    CHAPTER_VERSE_COUNTS[id]
   end
 
   def self.get_max_chapter(book)
-    book_chapter_counts[book]
+    BOOK_CHAPTER_COUNTS[book]
   end
 
 
@@ -294,8 +284,8 @@ private
 
   def set_book(value)
     @book = value || raise(ArgumentError, "must specify book")
-    @book_name = Pericope.book_names[@book]
-    @book_chapter_count = Pericope.book_chapter_counts[@book]
+    @book_name = Pericope::BOOK_NAMES[@book]
+    @book_chapter_count = Pericope::BOOK_CHAPTER_COUNTS[@book]
   end
 
 
@@ -421,8 +411,8 @@ private
 
   def self.recognize_book(book)
     book = book.to_s.downcase
-    book_name_regexes.each do |book_regex|
-      return book_regex[0] if book =~ book_regex[1]
+    BOOK_NAME_REGEXES.each do |book_id, regex|
+      return book_id if book =~ regex
     end
     nil
   end
@@ -490,71 +480,6 @@ private
     end
   end
 
-
-
-  def self.load_chapter_verse_count_books!
-    current_book_id = nil
-    chapters = 0
-    @chapter_verse_counts = {}
-    @book_chapter_counts = [{}]
-
-    path = File.expand_path(File.dirname(__FILE__) + "/../data/chapter_verse_count.txt")
-    File.open(path) do |file|
-      file.each do |text|
-        row = text.chomp.split("\t")
-        id, verses = row[0].to_i, row[1].to_i
-        book_id = get_book(id)
-
-        @chapter_verse_counts[id] = verses
-
-        unless current_book_id == book_id
-          @book_chapter_counts.push chapters if current_book_id
-          current_book_id = book_id
-        end
-
-        chapters = get_chapter(id)
-      end
-    end
-
-    @book_chapter_counts.push chapters
-  end
-
-
-
-  def self.load_book_abbreviations!
-    @book_names = []
-    @book_name_regexes = {}
-
-    path = File.expand_path(File.dirname(__FILE__) + "/../data/book_abbreviations.txt")
-    File.open(path) do |file|
-      file.each do |text|
-        next if text.start_with?("#") # skip comments
-
-        # the file contains tab-separated values.
-        # the first value is the ordinal of the book, subsequent values
-        # represent abbreviations and misspellings that should be recognized
-        # as the aforementioned book.
-        segments = text.chomp.split("\t")
-        book_id = segments.shift.to_i
-        @book_names[book_id] = segments.shift
-        @book_name_regexes[book_id] = /\b(?:#{segments.join("|")})\b/
-      end
-    end
-  end
-
-
-
-  def self.chapter_verse_counts
-    load_chapter_verse_count_books! unless defined?(@chapter_verse_counts)
-    @chapter_verse_counts
-  end
-
-
-
-  def self.book_chapter_counts
-    load_chapter_verse_count_books! unless defined?(@book_chapter_counts)
-    @book_chapter_counts
-  end
 
 
   BOOK_PATTERN = %r{\b(?:
