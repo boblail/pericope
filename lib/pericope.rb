@@ -392,11 +392,9 @@ private
   def self.match_all(text)
     text.scan(Pericope::PERICOPE_PATTERN) do
       match = Regexp.last_match
+      book = BOOK_IDS[match.captures.find_index(&:itself)]
 
-      book = recognize_book(match[1])
-      next unless book
-
-      ranges = parse_reference(book, match[2])
+      ranges = parse_reference(book, match[67])
       next if ranges.empty?
 
       attributes = {
@@ -407,14 +405,6 @@ private
 
       yield attributes, match
     end
-  end
-
-  def self.recognize_book(book)
-    book = book.to_s.downcase
-    BOOK_NAME_REGEXES.each do |book_id, regex|
-      return book_id if book =~ regex
-    end
-    nil
   end
 
   def self.parse_reference(book, reference)
@@ -484,82 +474,87 @@ private
 
   BOOK_PATTERN = %r{\b(?:
       (?:(?:3|iii|third|3rd)\s*(?:
-        john|joh|jon|jhn|jh|jo|jn
+        (john|joh|jon|jhn|jh|jo|jn)
       ))|
       (?:(?:2|ii|second|2nd)\s*(?:
-        samuels|samuel|sam|sa|sm|
-        kings|king|kngs|kgs|kg|k|
-        chronicles|chronicle|chron|chrn|chr|
-        john|joh|jon|jhn|jh|jo|jn|
-        corinthians?|cor?|corint?h?|corth|
-        thessalonians?|thes{1,}|the?s?|
-        timothy|tim|tm|ti|
-        peter|pete|pet|ptr|pe|pt|pr
+        (samuels|samuel|sam|sa|sm)|
+        (kings|king|kngs|kgs|kg|k)|
+        (chronicles|chronicle|chron|chrn|chr)|
+        (john|joh|jon|jhn|jh|jo|jn)|
+        (corinthians?|cor?|corint?h?|corth)|
+        (thessalonians?|thes{1,}|the?s?)|
+        (timothy|tim|tm|ti)|
+        (peter|pete|pet|ptr|pe|pt|pr)
       ))|
       (?:(?:1|i|first|1st)\s*(?:
-        samuels|samuel|sam|sa|sm|
-        kings|king|kngs|kgs|kg|k|
-        chronicles|chronicle|chron|chrn|chr|
-        john|joh|jon|jhn|jh|jo|jn|
-        corinthians?|cor?|corint?h?|corth|
-        thessalonians?|thes{1,}|the?s?|
-        timothy|tim|tm|ti|
-        peter|pete|pet|ptr|pe|pt|pr
+        (samuels|samuel|sam|sa|sm)|
+        (kings|king|kngs|kgs|kg|k)|
+        (chronicles|chronicle|chron|chrn|chr)|
+        (john|joh|jon|jhn|jh|jo|jn)|
+        (corinthians?|cor?|corint?h?|corth)|
+        (thessalonians?|thes{1,}|the?s?)|
+        (timothy|tim|tm|ti)|
+        (peter|pete|pet|ptr|pe|pt|pr)
       ))|
-      genesis|gen|gn|ge|
-      exodus|exod|exo|exd|ex|
-      leviticus|lev|levi|le|lv|
-      numbers|number|numb|num|nmb|nu|nm|
-      deuteronomy|deut|deu|dt|
-      joshua|josh|jsh|jos|
-      judges|jdgs|judg|jdg|
-      ruth|rut|rth|ru|
-      isaiah|isa|is|ia|isai|isah|
-      ezra|ezr|
-      nehemiah|neh|ne|
-      esther|esth|est|es|
-      job|jb|
-      psalms|psalm|pslms|pslm|psm|psa|ps|
-      proverbs|proverb|prov|prv|prvb|prvbs|pv|
-      ecclesiastes|eccles|eccl|ecc|ecl|
-      (?:the\s?)?song\s?of\s?solomon|(?:the\s?)?song\s?of\s?songs|sn?gs?|songs?|so?s|sol?|son|s\s?of\s?\ss|
-      jeremiah?|jer?|jr|jere|
-      lamentations?|lam?|lm|
-      ezekiel|ezek|eze|ezk|
-      daniel|dan|dn|dl|da|
-      hosea|hos|ho|hs|
-      joel|jl|
-      amos|amo|ams|am|
-      obadiah|obadia|obad|oba|obd|ob|
-      jonah|jon|
-      micah|mica|mic|mi|
-      nahum|nah|nahu|na|
-      habakk?uk|habk?|
-      zephaniah?|ze?ph?|
-      haggai|ha?gg?|
-      zechariah?|ze?ch?|
-      malachi|mal|
-      matthew|matt|mat|ma|mt|
-      mark|mrk|mk|
-      luke|luk|lk|lu|
-      john|joh|jon|jhn|jh|jo|jn|
-      acts|act|ac|
-      romans|roman|roms|rom|rms|ro|rm|
-      galatians|galatian|galat|gala|gal|ga|
-      ephesians?|eph?|ephe?s?|
-      philippians?|phi?l|php|phi|philipp?|
-      colossi?ans?|col?|
-      titus|tit|ti|
-      philemon|phl?mn?|philem?|
-      hebrews|hebrew|heb|
-      james|jam|jas|jm|js|ja|
-      jude|
-      revelations|revelation|revel|rev|rv|re
+      (genesis|gen|gn|ge)|
+      (exodus|exod|exo|exd|ex)|
+      (leviticus|lev|levi|le|lv)|
+      (numbers|number|numb|num|nmb|nu|nm)|
+      (deuteronomy|deut|deu|dt)|
+      (joshua|josh|jsh|jos)|
+      (judges|jdgs|judg|jdg)|
+      (ruth|rut|rth|ru)|
+      (isaiah|isa|is|ia|isai|isah)|
+      (ezra|ezr)|
+      (nehemiah|neh|ne)|
+      (esther|esth|est|es)|
+      (job|jb)|
+      (psalms|psalm|pslms|pslm|psm|psa|ps)|
+      (proverbs|proverb|prov|prv|prvb|prvbs|pv)|
+      (ecclesiastes|eccles|eccl|ecc|ecl)|
+      ((?:the\s?)?song\s?of\s?solomon|(?:the\s?)?song\s?of\s?songs|sn?gs?|songs?|so?s|sol?|son|s\s?of\s?\ss)|
+      (jeremiah?|jer?|jr|jere)|
+      (lamentations?|lam?|lm)|
+      (ezekiel|ezek|eze|ezk)|
+      (daniel|dan|dn|dl|da)|
+      (hosea|hos|ho|hs)|
+      (joel|jl)|
+      (amos|amo|ams|am)|
+      (obadiah|obadia|obad|oba|obd|ob)|
+      (jonah|jon)|
+      (micah|mica|mic|mi)|
+      (nahum|nah|nahu|na)|
+      (habakk?uk|habk?)|
+      (zephaniah?|ze?ph?)|
+      (haggai|ha?gg?)|
+      (zechariah?|ze?ch?)|
+      (malachi|mal)|
+      (matthew|matt|mat|ma|mt)|
+      (mark|mrk|mk)|
+      (luke|luk|lk|lu)|
+      (john|joh|jon|jhn|jh|jo|jn)|
+      (acts|act|ac)|
+      (romans|roman|roms|rom|rms|ro|rm)|
+      (galatians|galatian|galat|gala|gal|ga)|
+      (ephesians?|eph?|ephe?s?)|
+      (philippians?|phi?l|php|phi|philipp?)|
+      (colossi?ans?|col?)|
+      (titus|tit|ti)|
+      (philemon|phl?mn?|philem?)|
+      (hebrews|hebrew|heb)|
+      (james|jam|jas|jm|js|ja)|
+      (jude)|
+      (revelations|revelation|revel|rev|rv|re)
   )}ix.freeze
+
+  # The order books of the Bible are matched
+  BOOK_IDS = [ 64, 10, 12, 14, 63, 47, 53, 55, 61, 9, 11, 13, 62, 46, 52, 54, 60, 1, 2, 3, 4, 5, 6,  7, 8, 23, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 48, 49, 50, 51, 56, 57, 58, 59, 65, 66 ].freeze
+
+  BOOK_NAMES = [nil, "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalm", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"].freeze
 
   REFERENCE_PATTERN = '(?:\s*\d{1,3})(?:\s*[:\"\.]\s*\d{1,3}[ab]?(?:\s*[,;]\s*(?:\d{1,3}[:\"\.])?\s*\d{1,3}[ab]?)*)?(?:\s*[-–—]\s*(?:\d{1,3}\s*[:\"\.])?(?:\d{1,3}[ab]?)(?:\s*[,;]\s*(?:\d{1,3}\s*[:\"\.])?\s*\d{1,3}[ab]?)*)*'
 
-  PERICOPE_PATTERN = /(#{BOOK_PATTERN.source.gsub(/[ \n]/, "")})\.?(#{REFERENCE_PATTERN})/i
+  PERICOPE_PATTERN = /#{BOOK_PATTERN.source.gsub(/[ \n]/, "")}\.?(#{REFERENCE_PATTERN})/i
 
   NORMALIZATIONS = [
     [/(\d+)[".](\d+)/, '\1:\2'], # 12"5 and 12.5 -> 12:5

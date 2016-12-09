@@ -37,36 +37,13 @@ task :compile do
   end
   book_chapter_counts.push chapters
 
-
-  book_names = []
-  book_name_regexes = {}
-
-  path = "#{data_path}/book_abbreviations.txt"
-  File.open(path) do |file|
-    file.each do |text|
-      next if text.start_with?("#") # skip comments
-
-      # the file contains tab-separated values.
-      # the first value is the ordinal of the book, subsequent values
-      # represent abbreviations and misspellings that should be recognized
-      # as the aforementioned book.
-      segments = text.chomp.split("\t")
-      book_id = segments.shift.to_i
-      book_names[book_id] = segments.shift
-      book_name_regexes[book_id] = /\b(?:#{segments.join("|")})\b/i
-    end
-  end
-
   File.open(output_path + "/data.rb", "w") do |file|
     file.write <<-RUBY
 class Pericope
   CHAPTER_VERSE_COUNTS = #{chapter_verse_counts.inspect}.freeze
   BOOK_CHAPTER_COUNTS = #{book_chapter_counts.inspect}.freeze
-  BOOK_NAMES = #{book_names.inspect}.freeze
-  BOOK_NAME_REGEXES = #{book_name_regexes.inspect}.freeze
 end
     RUBY
   end
-
 
 end
