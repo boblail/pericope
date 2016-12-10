@@ -79,8 +79,7 @@ class Pericope
 
 
 
-  def self.split(text, pattern=nil)
-    puts "DEPRECATION NOTICE: split will no longer accept a 'pattern' argument in Pericope 0.7.0" if pattern
+  def self.split(text)
     segments = []
     start = 0
 
@@ -105,37 +104,7 @@ class Pericope
       yield pretext if block_given?
     end
 
-    segments = ___split_segments_by_pattern(segments, pattern) if pattern
     segments
-  end
-
-  def self.___split_segments_by_pattern(segments, pattern)
-    segments2 = []
-    segments.each do |segment|
-      if segment.is_a? Pericope
-        segments2 << segment
-      else
-        segments2.concat(segment.split(pattern))
-      end
-    end
-    segments2
-  end
-
-
-
-  def self.extract(text)
-    puts "DEPRECATION NOTICE: the 'extract' method will be removed in Pericope 0.7.0"
-    segments = split(text)
-    text = ""
-    pericopes = []
-    segments.each do |segment|
-      if segment.is_a?(String)
-        text << segment
-      else
-        pericopes << segment
-      end
-    end
-    {:text => text, :pericopes => pericopes}
   end
 
 
@@ -164,13 +133,6 @@ class Pericope
 
   def to_s(options={})
     "#{book_name} #{well_formatted_reference(options)}"
-  end
-
-
-
-  def report
-    puts "DEPRECATION NOTICE: the 'report' method will be removed in Pericope 0.7.0"
-    "  #{self.original_string} => #{self}"
   end
 
 
