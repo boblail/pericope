@@ -1,21 +1,21 @@
 PATH
   remote: .
   specs:
-    pericope (0.7.0.pre)
+    pericope (0.7.0)
       activesupport
 
 GEM
   remote: http://rubygems.org/
   specs:
-    activesupport (5.0.0.1)
+    activesupport (5.0.2)
       concurrent-ruby (~> 1.0, >= 1.0.2)
       i18n (~> 0.7)
       minitest (~> 5.1)
       tzinfo (~> 1.1)
     ansi (1.5.0)
     builder (3.2.2)
-    concurrent-ruby (1.0.2)
-    i18n (0.7.0)
+    concurrent-ruby (1.0.5)
+    i18n (0.8.1)
     minitest (5.8.3)
     minitest-reporters (1.1.9)
       ansi
@@ -26,8 +26,8 @@ GEM
       minitest-reporters
     rake (10.0.4)
     ruby-progressbar (1.8.1)
-    thread_safe (0.3.5)
-    tzinfo (1.2.2)
+    thread_safe (0.3.6)
+    tzinfo (1.2.3)
       thread_safe (~> 0.1)
 
 PLATFORMS
@@ -42,4 +42,4 @@ DEPENDENCIES
   rake (~> 10.0)
 
 BUNDLED WITH
-   1.11.2
+   1.14.6
