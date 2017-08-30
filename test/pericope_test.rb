@@ -46,7 +46,7 @@ class PericopeTest < Minitest::Test
 
 
   def test_PERICOPE_PATTERN
-    assert_equal nil, "Cross, 1" =~ Pericope::PERICOPE_PATTERN, "\"Cross, 1\" should not be matched as a pericope!"
+    assert_nil "Cross, 1" =~ Pericope::PERICOPE_PATTERN, "\"Cross, 1\" should not be matched as a pericope!"
   end
 
 
