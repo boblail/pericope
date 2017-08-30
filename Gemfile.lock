@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pericope (0.7.0)
+    pericope (0.7.1)
       activesupport
 
 GEM
