@@ -1,17 +1,8 @@
-# encoding: UTF-8
-
 require "pericope/version"
 require "pericope/data"
 
 class Pericope
-  attr_reader :book,
-              :book_chapter_count,
-              :book_name,
-              :original_string,
-              :ranges
-
-
-
+  attr_reader :book, :book_chapter_count, :book_name, :original_string, :ranges
 
   def initialize(arg)
     case arg
@@ -133,6 +124,18 @@ class Pericope
 
   def to_s(options={})
     "#{book_name} #{well_formatted_reference(options)}"
+  end
+
+  def inspect
+    "Pericope(#{to_s})"
+  end
+
+  def ==(other)
+    other.is_a?(self.class) && [book, ranges] == [other.book, other.ranges]
+  end
+
+  def hash
+    [book, ranges].hash
   end
 
 

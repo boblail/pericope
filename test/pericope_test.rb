@@ -318,6 +318,14 @@ class PericopeTest < Minitest::Test
 
 
 
+  def test_equality
+    a = Pericope.new("rom. 1:5-6")
+    b = Pericope.new("Romans 1:5–6")
+    assert_equal a, b, "Expected two pericopes that refer to the same verses to be equal"
+  end
+
+
+
 end
 
 
