@@ -8,7 +8,7 @@ class Pericope
     case arg
     when String
       attributes = Pericope.match_one(arg)
-      raise "no pericope found in #{arg} (#{arg.class})" if attributes.nil?
+      raise ArgumentError, "no pericope found in #{arg}" if attributes.nil?
 
       @original_string = attributes[:original_string]
       @book = attributes[:book]
