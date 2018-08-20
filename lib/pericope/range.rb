@@ -24,23 +24,8 @@ class Pericope
       self.begin.hash ^ self.end.hash
     end
 
-    def each(&block)
+    def each
       return to_enum unless block_given?
-
-      min_chapter = Pericope.get_chapter(self.begin)
-      max_chapter = Pericope.get_chapter(self.end)
-
-      unless min_chapter == max_chapter
-        book = Pericope.get_book(self.begin)
-        self.class.new(self.begin, Pericope.get_last_verse(book, min_chapter)).each(&block)
-        for chapter in (min_chapter + 1)...max_chapter
-          self.class.new(
-            Pericope.get_first_verse(book, chapter),
-            Pericope.get_last_verse(book, chapter)).each(&block)
-        end
-        self.class.new(Pericope.get_first_verse(book, max_chapter), self.end).each(&block)
-        return
-      end
 
       current = self.begin
       while current <= self.end

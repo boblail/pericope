@@ -1,6 +1,7 @@
 require "pericope/version"
 require "pericope/data"
 require "pericope/range"
+require "pericope/verse"
 
 class Pericope
   attr_reader :book, :original_string, :ranges
@@ -16,15 +17,13 @@ class Pericope
       @ranges = attributes[:ranges]
 
     when Array
-      arg = arg.map(&:to_i)
-      @book = Pericope.get_book(arg.first)
       @ranges = group_array_into_ranges(arg)
+      @book = @ranges.first.begin.book
 
     else
-      attributes = arg
-      @original_string = attributes[:original_string]
-      @book = attributes[:book]
-      @ranges = attributes[:ranges]
+      @original_string = arg[:original_string]
+      @book = arg[:book]
+      @ranges = arg[:ranges]
 
     end
     raise ArgumentError, "must specify book" unless @book
@@ -146,38 +145,29 @@ class Pericope
     recent_chapter = 1 unless book_has_chapters?
 
     ranges.each_with_index.each_with_object("") do |(range, i), s|
-      min_chapter = Pericope.get_chapter(range.begin)
-      min_verse = Pericope.get_verse(range.begin)
-      max_chapter = Pericope.get_chapter(range.end)
-      max_verse = Pericope.get_verse(range.end)
-
       if i > 0
-        if recent_chapter == min_chapter
+        if recent_chapter == range.begin.chapter
           s << verse_list_separator
         else
           s << chapter_list_separator
         end
       end
 
-      if min_verse == 1 && max_verse >= Pericope.get_max_verse(book, max_chapter) && !always_print_verse_range
-        s << min_chapter.to_s
-        s << "#{chapter_range_separator}#{max_chapter}" if max_chapter > min_chapter
+      if range.begin.verse == 1 && range.end.verse >= Pericope.get_max_verse(book, range.end.chapter) && !always_print_verse_range
+        s << range.begin.chapter.to_s
+        s << "#{chapter_range_separator}#{range.end.chapter}" if range.end.chapter > range.begin.chapter
       else
-        if recent_chapter == min_chapter
-          s << min_verse.to_s
-        else
-          recent_chapter = min_chapter
-          s << "#{min_chapter}:#{min_verse}"
-        end
+        s << range.begin.to_s(with_chapter: recent_chapter != range.begin.chapter)
 
         if range.begin != range.end
-          if min_chapter == max_chapter
-            s << "#{verse_range_separator}#{max_verse}"
+          if range.begin.chapter == range.end.chapter
+            s << "#{verse_range_separator}#{range.end}"
           else
-            recent_chapter = max_chapter
-            s << "#{chapter_range_separator}#{max_chapter}:#{max_verse}"
+            s << "#{chapter_range_separator}#{range.end.to_s(with_chapter: true)}"
           end
         end
+
+        recent_chapter = range.end.chapter
       end
     end
   end
@@ -214,25 +204,6 @@ private
 
 
 
-  def self.get_first_verse(book, chapter)
-    get_id(book, chapter, 1)
-  end
-
-  def self.get_last_verse(book, chapter)
-    get_id(book, chapter, get_max_verse(book, chapter))
-  end
-
-  def self.get_next_verse(id)
-    id + 1
-  end
-
-  def self.get_start_of_next_chapter(id)
-    book = get_book(id)
-    chapter = get_chapter(id) + 1
-    verse = 1
-    get_id(book, chapter, verse)
-  end
-
   def self.to_valid_book(book)
     coerce_to_range(book, 1..66)
   end
@@ -251,24 +222,12 @@ private
     number
   end
 
-  def self.get_id(book, chapter, verse)
+  def self.to_verse(book, chapter, verse)
     book = to_valid_book(book)
     chapter = to_valid_chapter(book, chapter)
     verse = to_valid_verse(book, chapter, verse)
 
-    (book * 1000000) + (chapter * 1000) + verse
-  end
-
-  def self.get_book(id)
-    id / 1000000 # the book is everything left of the least significant 6 digits
-  end
-
-  def self.get_chapter(id)
-    (id % 1000000) / 1000 # the chapter is the 3rd through 6th most significant digits
-  end
-
-  def self.get_verse(id)
-    id % 1000 # the verse is the 3 least significant digits
+    Verse.new(book, chapter, verse)
   end
 
 
@@ -276,14 +235,13 @@ private
   def group_array_into_ranges(verses)
     return [] if verses.nil? or verses.empty?
 
-    verses = verses.flatten.compact.sort
+    verses = verses.flatten.compact.sort.map { |verse| Verse.parse(verse) }
 
     ranges = []
     range_begin = verses.shift
     range_end = range_begin
     while verse = verses.shift
-      if (verse == Pericope.get_next_verse(range_end)) ||
-         (verse == Pericope.get_start_of_next_chapter(range_end))
+      if verse == range_end.next
         range_end = verse
       else
         ranges << Range.new(range_begin, range_end)
@@ -380,8 +338,8 @@ private
       recent_chapter = upper_chapter_verse[0] # remember the last chapter
 
       Range.new(
-        Pericope.get_id(book, *lower_chapter_verse),
-        Pericope.get_id(book, *upper_chapter_verse))
+        Pericope.to_verse(book, *lower_chapter_verse),
+        Pericope.to_verse(book, *upper_chapter_verse))
     end
   end
 

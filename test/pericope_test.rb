@@ -341,12 +341,29 @@ class PericopeTest < Minitest::Test
           assert_equal expected_reference, Pericope.new(verses).to_s
         end
       end
+
+      should "chain successive verses into ranges" do
+        tests = [
+          [[43020019, 43020020, 43020021, 43020022, 43020023], [r(43020019, 43020023)]],               # John 20:19–23
+          [[19122007, 19122008, 19122009, 19123001, 19123002], [r(19122007, 19123002)]],               # Psalm 122:7—123:2
+          [[19122007, 19122008, 19123001, 19123002], [r(19122007, 19122008), r(19123001, 19123002)]] ] # Psalm 122:7–8, 123:1–2
+
+        tests.each do |(verses, ranges)|
+          assert_equal ranges, Pericope.new(verses).ranges
+        end
+      end
     end
 
     context "#to_a" do
       should "return an array of verses" do
         @tests.each do |reference, expected_verses|
           assert_equal expected_verses, Pericope(reference).to_a.map(&:to_i), "Expected #{reference} to map to these verses: #{expected_verses}"
+        end
+      end
+
+      should "raise an exception if pass an invalid verse" do
+        assert_raises ArgumentError do
+          Pericope.new([67001001])
         end
       end
     end
@@ -361,7 +378,11 @@ private
   end
 
   def r(low, high = low)
-    Pericope::Range.new(low, high)
+    Pericope::Range.new(v(low), v(high))
+  end
+
+  def v(arg)
+    Pericope::Verse.parse(arg)
   end
 
 end
