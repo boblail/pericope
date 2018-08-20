@@ -20,12 +20,6 @@ class PericopeTest < Minitest::Test
 
 
 
-  def test_instantiating_pericope_from_a_range
-    assert_equal Pericope.new("Ezekiel 2:8—3:11").to_s, Pericope.new(26002008..26003011).to_s
-  end
-
-
-
   def test_valid_book_references
     tests = {
       "ii samuel" => "ii samuel",

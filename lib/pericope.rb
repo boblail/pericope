@@ -19,14 +19,6 @@ class Pericope
       @book = Pericope.get_book(arg.first)
       @ranges = Pericope.group_array_into_ranges(arg)
 
-    when Range
-      STDERR.puts "DEPRECATION WARNING: instantiating a pericope with a single range is deprecated and will be removed in pericope 1.0.",
-           "",
-           "   You can change `Pericope.new(range)` to `Pericope.new(range.to_a)`",
-           ""
-      @book = Pericope.get_book(arg.begin)
-      @ranges = [arg]
-
     else
       attributes = arg
       @original_string = attributes[:original_string]
