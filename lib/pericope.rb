@@ -113,34 +113,6 @@ class Pericope
 
 
 
-  def self.sub(text)
-    STDERR.puts "DEPRECATION WARNING: Pericope.sub is deprecated and will be removed in pericope 1.0.",
-         "",
-         "   You can use `Pericope.split` with `inject` to replace pericopes in a block of text",
-         ""
-
-    split(text).inject("") do |text, segment|
-      if segment.is_a?(String)
-        text << segment
-      else
-        text << "{{#{segment.to_a.join(" ")}}}"
-      end
-    end
-  end
-
-
-
-  def self.rsub(text)
-    STDERR.puts "DEPRECATION WARNING: Pericope.rsub is deprecated and will be removed in pericope 1.0."
-
-    text.gsub(/\{\{(\d{7,8} ?)+\}\}/) do |match|
-      ids = match[2...-2].split.collect(&:to_i)
-      Pericope.new(ids).to_s
-    end
-  end
-
-
-
   def to_s(options={})
     "#{book_name} #{well_formatted_reference(options)}"
   end

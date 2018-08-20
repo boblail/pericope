@@ -300,19 +300,6 @@ class PericopeTest < Minitest::Test
 
 
 
-  def test_pericope_substitution
-    text =  "2 Peter 3:1–2 Lorem ipsum dolor sit amet"
-    expected_text = "{{61003001 61003002}} Lorem ipsum dolor sit amet"
-    actual_text = Pericope.sub(text)
-    assert_equal expected_text, actual_text
-
-    expected_text, text = text, expected_text
-    actual_text = Pericope.rsub(text)
-    assert_equal expected_text, actual_text
-  end
-
-
-
   def test_pericope_extraction_2
     expecations = {
       "This is some text about 1 Cor 1:1" => "1 Corinthians 1:1"
