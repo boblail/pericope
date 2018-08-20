@@ -238,12 +238,12 @@ class Pericope
 
 
 
-  def intersects?(pericope)
-    return false unless pericope.is_a?(Pericope)
-    return false unless book == pericope.book
+  def intersects?(other)
+    return false unless other.is_a?(Pericope)
+    return false unless book == other.book
 
     ranges.each do |self_range|
-      pericope.ranges.each do |other_range|
+      other.ranges.each do |other_range|
         return true if (self_range.end >= other_range.begin) and (self_range.begin <= other_range.end)
       end
     end
