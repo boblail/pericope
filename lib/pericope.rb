@@ -388,8 +388,7 @@ private
   end
 
   def self.parse_reference(book, reference)
-    reference = normalize_reference(reference)
-    parse_ranges(book, reference.split(/[,;]/))
+    parse_ranges(book, normalize_reference(reference).split(/[,;]/))
   end
 
   def self.normalize_reference(reference)
