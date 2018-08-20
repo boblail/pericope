@@ -2,7 +2,7 @@ require "pericope/version"
 require "pericope/data"
 
 class Pericope
-  attr_reader :book, :book_chapter_count, :book_name, :original_string, :ranges
+  attr_reader :book, :original_string, :ranges
 
   def initialize(arg)
     case arg
@@ -11,12 +11,12 @@ class Pericope
       raise "no pericope found in #{arg} (#{arg.class})" if attributes.nil?
 
       @original_string = attributes[:original_string]
-      set_book attributes[:book]
+      @book = attributes[:book]
       @ranges = attributes[:ranges]
 
     when Array
       arg = arg.map(&:to_i)
-      set_book Pericope.get_book(arg.first)
+      @book = Pericope.get_book(arg.first)
       @ranges = Pericope.group_array_into_ranges(arg)
 
     when Range
@@ -24,16 +24,17 @@ class Pericope
            "",
            "   You can change `Pericope.new(range)` to `Pericope.new(range.to_a)`",
            ""
-      set_book Pericope.get_book(arg.begin)
+      @book = Pericope.get_book(arg.begin)
       @ranges = [arg]
 
     else
       attributes = arg
       @original_string = attributes[:original_string]
-      set_book attributes[:book]
+      @book = attributes[:book]
       @ranges = attributes[:ranges]
 
     end
+    raise ArgumentError, "must specify book" unless @book
   end
 
 
@@ -44,6 +45,14 @@ class Pericope
 
   def book_has_chapters?
     book_chapter_count > 1
+  end
+
+  def book_name
+    @book_name ||= Pericope::BOOK_NAMES[@book]
+  end
+
+  def book_chapter_count
+    @book_chapter_count ||= Pericope::BOOK_CHAPTER_COUNTS[@book]
   end
 
 
@@ -259,14 +268,6 @@ class Pericope
 
 
 private
-
-
-
-  def set_book(value)
-    @book = value || raise(ArgumentError, "must specify book")
-    @book_name = Pericope::BOOK_NAMES[@book]
-    @book_chapter_count = Pericope::BOOK_CHAPTER_COUNTS[@book]
-  end
 
 
 
