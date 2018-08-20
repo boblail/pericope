@@ -392,9 +392,7 @@ private
   end
 
   def self.normalize_reference(reference)
-    reference = reference.to_s
-    NORMALIZATIONS.each { |(regex, replacement)| reference.gsub!(regex, replacement) }
-    reference
+    NORMALIZATIONS.reduce(reference.to_s) { |reference, (regex, replacement)| reference.gsub(regex, replacement) }
   end
 
   def self.parse_ranges(book, ranges)
