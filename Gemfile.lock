@@ -18,6 +18,7 @@ GEM
       minitest-reporters
     rake (10.5.0)
     ruby-progressbar (1.10.0)
+    shoulda-context (1.2.2)
 
 PLATFORMS
   ruby
@@ -29,6 +30,7 @@ DEPENDENCIES
   minitest-reporters-turn_reporter
   pericope!
   rake (~> 10.0)
+  shoulda-context
 
 BUNDLED WITH
    1.16.1

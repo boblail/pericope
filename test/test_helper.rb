@@ -4,4 +4,5 @@ require "pericope"
 require "minitest/reporters/turn_reporter"
 MiniTest::Reporters.use! Minitest::Reporters::TurnReporter.new
 
+require "shoulda/context"
 require "minitest/autorun"

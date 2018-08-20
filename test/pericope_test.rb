@@ -3,86 +3,39 @@ require "test_helper"
 class PericopeTest < Minitest::Test
 
 
+  context "quickly recognizes Bible references:" do
+    context "BOOK_PATTERN" do
+      should "match valid books (including by abbreviations and common misspellings)" do
+        tests = {
+          "ii samuel" => "ii samuel",
+          "1 cor." => "1 cor",
+          "jas" => "jas",
+          "song of songs" => "song of songs",
+          "song of solomon" => "song of solomon",
+          "first kings" => "first kings",
+          "3rd jn" => "3rd jn",
+          "phil" => "phil" }
 
-  def test_get_max_verse
-    assert_equal 29, Pericope.get_max_verse(1, 9)
-    assert_equal 26, Pericope.get_max_verse(1, 50)
-  end
-
-
-
-  def test_parsing_a_pericope_of_just_chapters
-    pericope = Pericope.new('ps 1-8')
-    assert_equal 'Psalm', pericope.book_name
-    assert_equal 150, pericope.book_chapter_count
-    assert_equal true, pericope.book_has_chapters?
-  end
-
-
-
-  def test_valid_book_references
-    tests = {
-      "ii samuel" => "ii samuel",
-      "1 cor." => "1 cor",
-      "jas" => "jas",
-      "song of songs" => "song of songs",
-      "song of solomon" => "song of solomon",
-      "first kings" => "first kings",
-      "3rd jn" => "3rd jn",
-      "phil" => "phil"
-    }
-
-    tests.each do |input, expected_match|
-      assert_equal expected_match, input[Pericope::BOOK_PATTERN]
+        tests.each do |input, expected_match|
+          assert_equal expected_match, input[Pericope::BOOK_PATTERN], "Expected Pericope to recognize \"#{input}\" as a potential book"
+        end
+      end
     end
-  end
 
+    context "PERICOPE_PATTERN" do
+      should "match things that look like pericopes" do
+        tests = [ "Romans 3:9" ]
 
+        tests.each do |input|
+          assert input[Pericope::PERICOPE_PATTERN], "Expected Pericope to recognize \"#{input}\" as a potential pericope"
+        end
+      end
 
-  def test_PERICOPE_PATTERN
-    assert_nil "Cross, 1" =~ Pericope::PERICOPE_PATTERN, "\"Cross, 1\" should not be matched as a pericope!"
-  end
+      should "not match things that do not look like pericopes" do
+        tests = [ "Cross 1", "Hezekiah 4:3" ]
 
-
-
-  def test_parsing_single_pericopes
-    tests = {
-      # test basic parsing
-      ["gen 1", "gen. 1", "Genesis 1", "gen 1:1-999"] => [1001001..1001031],
-      ["ex 12", "exodus 12", "ex 12:1-999"] => [2012001..2012051],
-      ["jn 12:1-13:8"] => [43012001..43013008],
-      ["ipet 1:1", "first peter 1:1", "1pete 1:1", "1 pet. 1.1"] => [60001001..60001001],
-      ["ps 1-8"] => [19001001..19008009],
-      ["ps1"] => [19001001..19001006],
-      ["mt4:15"] => [40004015..40004015],
-
-      # test that 'a' and 'b' parts of verses are ignored
-      ["mal 2:6a-9b", "mal 2:6-9"] => [39002006..39002009],
-
-      # test basic parsing for books with no chapters
-      ["jude 8-10", "jude 6:8-10"] => [65001008..65001010],
-
-      # test different punctuation, errors for range separators
-      ["matt 3:1,3,4-5,7,4:19", "matt 3:1, 3, 4-5, 7; 4:19"] => [40003001..40003001, 40003003..40003003, 40003004..40003005, 40003007..40003007, 40004019..40004019],
-
-      # test different punctuation, errors for chapter/verse pairing
-      ["hos 1:4-9", "hos 1\"4-9", "hos 1.4-9", "hos 1 :4-9", "hos 1: 4-9"] => [28001004..28001009],
-
-      # test verse coercion
-      ["mk 1:452"] => [41001045..41001045],
-      ["Genesis 15-55"] => [1015001..1050026],
-
-      # test chapter coercion
-      ["jn 28:1", "jn 125:1", "jn 21:1"] => [43021001..43021001],
-      ["jn 1:1", "jn 0:1"] => [43001001..43001001]
-    }
-
-    tests.each do |references, ranges|
-      for reference in references
-        pericope = Pericope.new(reference)
-        assert_equal ranges.length, pericope.ranges.length, "There should be only #{ranges.length} ranges for \"#{reference}\"."
-        for i in 0...ranges.length
-          assert_equal ranges[i], pericope.ranges[i], "Failure parsing \"#{reference}\": expected #{ranges[i]}, got #{pericope.ranges[i]}."
+        tests.each do |input|
+          refute input[Pericope::PERICOPE_PATTERN], "Expected Pericope to recognize that \"#{input}\" is not a potential pericope"
         end
       end
     end
@@ -90,19 +43,57 @@ class PericopeTest < Minitest::Test
 
 
 
-  def test_comparing_pericopes
-    tests = [
-      ["exodus 12", "exodus 12:3-13", "exodus 12:5"],    # basic intersection
-      ["3 jn 4-8", "3 jn 7:1-7", "3 jn 5"],              # intersection in a book with no chapters
-      ["matt 3:5-8", "matt 3:1-5"],                      # intersection on edge verses
-      ["matt 3:5-8", "matt 3:8-15"]                      # intersection on edge verses
-    ]
+  context "knows various boundaries in the Bible:" do
+    context "get_max_chapter" do
+      should "return the last chapter of a given book" do
+        tests = [
+          [ 1,  50],  # Genesis has 50 chapters
+          [19, 150],  # Psalms has 150 chapters
+          [65,   1],  # Jude has only 1 chapter
+          [66,  22] ] # Revelation has 22 chapters
 
-    tests.each do |test|
-      pericopes = test.map {|reference| Pericope.new(reference)}
-      for a in pericopes
-        for b in pericopes
-          assert a.intersects?(b),                        "Intersection failure: expected #{a} to intersect #{b}"
+        tests.each do |book, chapters|
+          assert_equal chapters, Pericope.get_max_chapter(book)
+        end
+      end
+    end
+
+    context "get_max_verse" do
+      should "return the last verse of a given chapter" do
+        tests = [
+          [ 1,   9,  29],    # Genesis 9 has 29 verses
+          [ 1,  50,  26] ]   # Genesis 50 has 26 verses
+
+        tests.each do |book, chapter, verses|
+          assert_equal verses, Pericope.get_max_verse(book, chapter)
+        end
+      end
+    end
+
+    context "book_has_chapters?" do
+      should "correctly identify books that don't have chapters" do
+        assert Pericope.book_has_chapters?(1),  "Genesis has chapters"
+        assert Pericope.book_has_chapters?(23), "Isaiah has chapters"
+        refute Pericope.book_has_chapters?(57), "Philemon does not have chapters"
+        refute Pericope.book_has_chapters?(65), "Jude does not have chapters"
+      end
+    end
+  end
+
+
+
+  context "identifies books of the Bible:" do
+    context "it" do
+      should "return an integer identifying the book of the Bible" do
+        tests = {
+          "Romans" => 45,  # Romans
+          "mark"   => 41,  # Mark
+          "ps"     => 19,  # Psalms
+          "jas"    => 59,  # James
+          "ex"     => 2 }  # Exodus
+
+        tests.each do |input, book|
+          assert_equal book, Pericope("#{input} 1").book, "Expected Pericope to be able to identify \"#{input}\" as book ##{book}"
         end
       end
     end
@@ -110,208 +101,264 @@ class PericopeTest < Minitest::Test
 
 
 
-  def test_comparing_with_an_invalid_pericope
-    assert_equal false, Pericope.new("mark 3-1").intersects?(Pericope.new("mark 2:1"))
-  end
+  context "parses the chapter-and-verse notation identifying Bible references:" do
+    context "parse_reference" do
+      should "parse a range of verses" do
+        assert_equal [19001001..19008009], Pericope.parse_reference(19, "1-8") # Psalm 1-8
+      end
 
+      should "parse a range of verses that spans a chapter" do
+        assert_equal [43012001..43013008], Pericope.parse_reference(43, "12:1–13:8") # John 12:1–13:8
+      end
 
+      should "parse a single verse as a range of one" do
+        assert_equal [60001001..60001001], Pericope.parse_reference(60, "1:1") # 1 Peter 1:1
+      end
 
-  def test_formatting_pericopes
-    tests = {
-      ["jas 4:7", "james 4:7", "James 4.7", "jas 4 :7", "jas 4: 7"] => "James 4:7",     # test basic formatting
-      ["2 sam 7", "iisam 7", "second samuel 7", "2sa 7", "2 sam. 7"] => "2 Samuel 7",   # test chapter range formatting
-      ["philemon 8-10", "philemon 6:8-10"] => "Philemon 8–10",                          # test book with no chapters
-      ["phil 1:1-17,2:3-5,17"] => "Philippians 1:1–17; 2:3–5, 17",                      # test comma-separated ranges
+      should "parse a chapter into a range of verses in that chapter" do
+        assert_equal [1001001..1001031], Pericope.parse_reference(1, "1") # Genesis 1
+      end
 
-      # omits verses when describing an entire chapter...
-      ["Psalm 1:1-6"] => "Psalm 1",
+      should "parse multiple ranges into an array of ranges" do
+        expected_ranges = [
+          40003001..40003001,
+          40003003..40003003,
+          40003004..40003005,
+          40003007..40003007,
+          40004019..40004019 ]
 
-      # ...except when the book has only a single chapter
-      ["Jude 1–25"] => "Jude 1–25",
+        tests = [
+          "3:1,3,4-5,7; 4:19",
+          "3:1, 3 ,4-5; 7,4:19"
+        ]
 
-      # test the values embedded in the pericope extraction
-      ["Psalm 37:3–7a, 23–24, 39–40"] => "Psalm 37:3–7, 23–24, 39–40",
-      ["John 20:19–23"] => "John 20:19–23",
-      ["ex 2-3"] => "Exodus 2—3",
-      ["2 Peter 4.1 "] => "2 Peter 3:1", # nb: chapter coercion
-      ["(Jas. 1:13, 20) "] => "James 1:13, 20",
-      ["jn 21:14, "] => "John 21:14",
-      ["zech 4:7, "] => "Zechariah 4:7",
-      ["mt 12:13. "] => "Matthew 12:13",
-      ["Luke 2---Maris "] => "Luke 2",
-      ["Luke 3\"1---Aliquam "] => "Luke 3:1",
-      ["(Acts 13:4-20)"] => "Acts 13:4–20"
-    }
+        tests.each do |input|
+          assert_equal expected_ranges, Pericope.parse_reference(40, input) # Matthew 3:1,3,4-5,7; 4:19
+        end
+      end
 
-    tests.each do |references, expected_result|
-      pericopes = references.map {|reference| Pericope.new(reference)}
-      for pericope in pericopes
-        assert_equal expected_result, pericope.to_s, "Formatting failure: expected #{pericope.original_string} to become #{expected_result}, not #{pericope.to_s}."
+      should "allow various punctuation errors for chapter/verse pairing" do
+        tests = ["1:4-9", "1\"4-9", "1.4-9", "1 :4-9", "1: 4-9"]
+
+        tests.each do |input|
+          assert_equal [28001004..28001009], Pericope.parse_reference(28, input)
+        end
+      end
+
+      should "ignore \"a\" and \"b\"" do
+        assert_equal [39002006..39002009], Pericope.parse_reference(39, "2:6a-9b")
+      end
+
+      should "work correctly on books with no chapters" do
+        assert_equal [65001008..65001010], Pericope.parse_reference(65, "8–10")
+      end
+
+      should "ignore chapter notation for chapterless books" do
+        assert_equal [57001008..57001010], Pericope.parse_reference(57, "6:8–10")
+      end
+
+      should "coerce verses to the right range" do
+        assert_equal [41001045..41001045], Pericope.parse_reference(41, "1:452")
+        assert_equal [41001001..41001001], Pericope.parse_reference(41, "1:0")
+      end
+
+      should "coerce chapters to the right range" do
+        assert_equal [43021001..43021001], Pericope.parse_reference(43, "28:1")
+        assert_equal [43001001..43001001], Pericope.parse_reference(43, "0:1")
       end
     end
   end
 
 
 
-  def test_verse_range_separator
-    assert_equal "John 1:1_7", Pericope.new("john 1:1-7").to_s(verse_range_separator: "_")
-  end
+  context "parses whole Bible references:" do
+    context "parse_one" do
+      should "work" do
+        pericope = Pericope.parse_one("ps 1:1-6")
+        assert_equal "Psalm", pericope.book_name
+        assert_equal [19001001..19001006], pericope.ranges
+      end
 
-  def test_chapter_range_separator
-    assert_equal "John 1_3", Pericope.new("john 1-3").to_s(chapter_range_separator: "_")
-  end
+      should "work even when there is no space between the book name and reference" do
+        pericope = Pericope.parse_one("ps1")
+        assert_equal "Psalm", pericope.book_name
+        assert_equal [19001001..19001006], pericope.ranges
+      end
 
-  def test_verse_list_separator
-    assert_equal "John 1:1_3", Pericope.new("john 1:1, 3").to_s(verse_list_separator: "_")
-  end
+      should "return nil for an invalid reference" do
+        assert_nil Pericope.parse_one("nope")
+      end
 
-  def test_chapter_list_separator
-    assert_equal "John 1:1_3:1", Pericope.new("john 1:1, 3:1").to_s(chapter_list_separator: "_")
-  end
+      should "ignore text before and after a reference" do
+        tests = {
+          "This is some text about 1 Cor 1:1" => "1 Corinthians 1:1",
+          "(Jas. 1:13, 20) "                  => "James 1:13, 20",
+          "jn 21:14, "                        => "John 21:14",
+          "zech 4:7, "                        => "Zechariah 4:7",
+          "mt 12:13. "                        => "Matthew 12:13",
+          "Luke 2---Maris "                   => "Luke 2",
+          "Luke 3\"1---Aliquam "              => "Luke 3:1",
+          "(Acts 13:4-20)"                    => "Acts 13:4–20" }
 
-  def test_always_print_verse_range
-    assert_equal "John 1", Pericope.new("john 1").to_s(always_print_verse_range: false)
-    assert_equal "John 1:1–51", Pericope.new("john 1").to_s(always_print_verse_range: true)
-  end
-
-  # TODO: fix Pericope.new("john 1, 3") # <-- not finding chapter 3
-
-
-
-  def test_converting_pericopes_to_arrays
-    tests = {
-      ["gen 1:1"] => [1001001],
-      ["ps 1"] => [19001001, 19001002, 19001003, 19001004, 19001005, 19001006],
-      ["ps 122:6-124:2"] => [19122006, 19122007, 19122008, 19122009, 19123001, 19123002, 19123003, 19123004, 19124001, 19124002],
-      ["Psalm 4-1"] => [19004001, 19004002, 19004003, 19004004, 19004005, 19004006, 19004007, 19004008]
-    }
-
-    tests.each do |references, expected_result|
-      pericopes = references.map {|reference| Pericope.new(reference)}
-      for pericope in pericopes
-        assert_equal expected_result, pericope.to_a,      "Formatting failure: expected #{pericope.original_string} to include #{expected_result}, not #{pericope.to_a}."
+        tests.each do |input, expected_pericope|
+          assert_equal expected_pericope, Pericope.parse_one(input).to_s, "Expected to find \"#{expected_pericope}\" in \"#{input}\""
+        end
       end
     end
   end
 
 
 
-  def test_converting_arrays_to_pericopes
-    tests = {
-      "Genesis 1:1" => [1001001],
-      "John 20:19–23" => [43020019, 43020020, 43020021, 43020022, 43020023],
-      "Psalm 1" => [19001001, 19001002, 19001003, 19001004, 19001005, 19001006],
-      "Psalm 122:6—124:2" => [19122006, 19122007, 19122008, 19122009, 19123001, 19123002, 19123003, 19123004, 19124001, 19124002]
-    }
+  context "formats Bible references:" do
+    context "#to_s" do
+      should "standardize book names" do
+        tests = {
+          "James 4"      => ["jas 4"],
+          "2 Samuel 7"   => ["2 sam 7", "iisam 7", "second samuel 7", "2sa 7", "2 sam. 7"] }
 
-    tests.each do |expected_result, array|
-      pericope = Pericope.new(array)
-      assert_equal expected_result, pericope.to_s
+        tests.each do |expected_result, inputs|
+          inputs.each do |input|
+            pericope = Pericope(input)
+            assert_equal expected_result, pericope.to_s, "Expected Pericope to format #{pericope.original_string} as #{expected_result}; got #{pericope}"
+          end
+        end
+      end
+
+      should "standardize chapter-and-verse notation" do
+        tests = {
+          "James 4:7"              => ["jas 4:7", "james 4:7", "James 4.7", "jas 4 :7", "jas 4: 7"],
+          "Mark 1:1–17; 2:3–5, 17" => ["mk 1:1-17,2:3-5,17"] }
+
+        tests.each do |expected_result, inputs|
+          inputs.each do |input|
+            pericope = Pericope(input)
+            assert_equal expected_result, pericope.to_s, "Expected Pericope to format #{pericope.original_string} as #{expected_result}; got #{pericope}"
+          end
+        end
+      end
+
+
+      should "omit verses when describing the entire chapter of a book" do
+        assert_equal "Psalm 1", Pericope("Psalm 1:1-6").to_s
+      end
+
+      should "never omit verses when describing all the verses in chapterless book" do
+        assert_equal "Jude 1–25", Pericope("Jude 1–25").to_s
+      end
+
+
+      should "allow customizing :verse_range_separator" do
+        assert_equal "John 1:1_7", Pericope.new("john 1:1-7").to_s(verse_range_separator: "_")
+      end
+
+      should "allow customizing :chapter_range_separator" do
+        assert_equal "John 1_3", Pericope.new("john 1-3").to_s(chapter_range_separator: "_")
+      end
+
+      should "allow customizing :verse_list_separator" do
+        assert_equal "John 1:1_3", Pericope.new("john 1:1, 3").to_s(verse_list_separator: "_")
+      end
+
+      should "allow customizing :chapter_list_separator" do
+        assert_equal "John 1:1_3:1", Pericope.new("john 1:1, 3:1").to_s(chapter_list_separator: "_")
+      end
+
+      should "allow customizing :always_print_verse_range" do
+        assert_equal "John 1", Pericope.new("john 1").to_s(always_print_verse_range: false)
+        assert_equal "John 1:1–51", Pericope.new("john 1").to_s(always_print_verse_range: true)
+      end
     end
   end
 
 
 
-  def test_splitting_text_with_pericopes
-    text = "Paul, rom. 12:1-4, Romans 9:7, 11, Election, Theology of Glory, Theology of the Cross, 1 Cor 15, Resurrection"
-    expected_keywords = [
-      "Paul",
-      "Romans 12:1–4",
-      "Romans 9:7, 11",
-      "Election",
-      "Theology of Glory",
-      "Theology of the Cross",
-      "1 Corinthians 15",
-      "Resurrection"]
+  context "picks pericopes out of a paragraph of text:" do
+    context "split" do
+      should "split text from pericopes" do
+        text = "Paul, rom. 12:1-4, Romans 9:7, 11, Election, Theology of Glory, Theology of the Cross, 1 Cor 15, Resurrection"
+        expected_fragments = [
+          "Paul, ",
+          Pericope("Romans 12:1–4"),
+          ", ",
+          Pericope("Romans 9:7, 11"),
+          ", Election, Theology of Glory, Theology of the Cross, ",
+          Pericope("1 Corinthians 15"),
+          ", Resurrection"
+        ]
 
-    # Convert pericopes to strings.
-    # Remove leading and trailing whitespace.
-    # Remove segments that consisted only of whitespace.
-    keywords = (Pericope.to_enum(:split, text).map { |arg|
-      arg.is_a?(Pericope) ? arg.to_s : arg.split(",").map(&:strip).reject(&:empty?)
-    }).flatten
-    assert_equal expected_keywords, keywords
+        assert_equal expected_fragments, Pericope.split(text)
+      end
+    end
   end
 
 
 
-  def test_pericope_extraction
-    text =  "2 Peter 4.1 Lorem ipsum dolor sit amet, Mark consectetur adipiscing elit 7. 1-2 Donec aliquam erat luctus
-            lacinia. Cras aliquet urna sed massa viverra eget ultricies risus sodales. Maecenas aliquet felis nec
-            justo pharetra rutrum eget a risus. (Jas. 1:13, 20) Etiam tincidunt pellentesque cursus. Nulla est libero,
-            bibendum sed elementum vitae, elementum vehicula quam. In bibendum massa sed quam convallis sed lacinia
-            orci aliquet. Donec tempus sodales, jn 21:14, zech 4:7, mk 3-1, and mt 12:13. Vestibulum nec nibh dolor,
-            vel hendrerit libero. Donec porta felis at lectus condimentum sollicitudin. Donec samuel magna in leo
-            vestibulum aliquam. Suspendisse eget magna leo 3\"2-1, in rutrum metus. Pellentesque nec lectus imperdiet
-            arcu venenatis placerat in quis diam. Luke 2---Mauris enim sapien, feugiat at vulputate ac, imperdiet sit
-            amet tellus. Donec posuere nisi odio, et laoreet libero. Luke 3\"1---Aliquam iaculis, elit sed venenatis
-            suscipit, tellus nibh sodales tortor, non lobortis neque sapien quis ante. Vivamus laoreet, mi eu imperdiet
-            bibendum, purus orci iaculis mi, vel first kings mi nisi auctor mauris. Integer dapibus lacinia arcu, ac
-            dignissim justo consectetur sit amet. (Acts 13:4-20)"
-    expected_text = " Lorem ipsum dolor sit amet, Mark consectetur adipiscing elit 7. 1-2 Donec aliquam erat luctus
-            lacinia. Cras aliquet urna sed massa viverra eget ultricies risus sodales. Maecenas aliquet felis nec
-            justo pharetra rutrum eget a risus. () Etiam tincidunt pellentesque cursus. Nulla est libero,
-            bibendum sed elementum vitae, elementum vehicula quam. In bibendum massa sed quam convallis sed lacinia
-            orci aliquet. Donec tempus sodales, , , , and . Vestibulum nec nibh dolor,
-            vel hendrerit libero. Donec porta felis at lectus condimentum sollicitudin. Donec samuel magna in leo
-            vestibulum aliquam. Suspendisse eget magna leo 3\"2-1, in rutrum metus. Pellentesque nec lectus imperdiet
-            arcu venenatis placerat in quis diam. ---Mauris enim sapien, feugiat at vulputate ac, imperdiet sit
-            amet tellus. Donec posuere nisi odio, et laoreet libero. ---Aliquam iaculis, elit sed venenatis
-            suscipit, tellus nibh sodales tortor, non lobortis neque sapien quis ante. Vivamus laoreet, mi eu imperdiet
-            bibendum, purus orci iaculis mi, vel first kings mi nisi auctor mauris. Integer dapibus lacinia arcu, ac
-            dignissim justo consectetur sit amet. ()"
-    # trick questions:
-    #   Mark            - no reference part
-    #   elit 7. 1-2     - 'elit' is not a book of the Bible
-    #   samuel          - no reference part
-    #   leo 3"2-1       - 'leo' is not a book of the Bible
-    #   first kings     - no reference part
-    expected_results = [
-      "2 Peter 3:1", # nb: chapter coercion
-      "James 1:13, 20",
-      "John 21:14",
-      "Zechariah 4:7",
-      "Mark 3", # the reference is mk 3-1. We can't make sense of the "-1" part, but we can of "mk 3"
-      "Matthew 12:13",
-      "Luke 2",
-      "Luke 3:1",
-      "Acts 13:4–20"
-    ]
+  context "can compare two Pericope:" do
+    context "intersects?" do
+      should "say whether two pericopes share any verses" do
+        tests = [
+          ["exodus 12", "exodus 12:3-13", "exodus 12:5"], # basic intersection
+          ["3 jn 4-8", "3 jn 7:1-7", "3 jn 5"],           # intersection in a book with no chapters
+          ["matt 3:5-8", "matt 3:1-5"],                   # intersection on edge verses
+          ["matt 3:5-8", "matt 3:8-15"] ]                 # intersection on edge verses
 
-    actual_text = ""
-    actual_results = []
-    Pericope.split(text) do |text_or_pericope|
-      if text_or_pericope.is_a?(Pericope)
-        actual_results << text_or_pericope.to_s
-      else
-        actual_text << text_or_pericope
+        tests.each do |references|
+          pericopes = references.map { |reference| Pericope(reference) }
+          pericopes.combination(2).each do |a, b|
+            assert a.intersects?(b), "Expected #{a} to intersect #{b}"
+          end
+        end
+
+        a = Pericope("mark 3-1")
+        b = Pericope("mark 2:1")
+        refute a.intersects?(b), "Expected #{a} NOT to intersect #{b}"
       end
     end
 
-    assert_equal expected_results, actual_results
-    assert_equal expected_text, actual_text
-  end
-
-
-
-  def test_pericope_extraction_2
-    expecations = {
-      "This is some text about 1 Cor 1:1" => "1 Corinthians 1:1"
-    }
-    expecations.each do |text, expectation|
-      assert_equal expectation, Pericope.parse_one(text).to_s, "Expected to find #{expectation.inspect} in #{text.inspect}"
+    context "it" do
+      should "consider two pericopes to be equal if they identify the same verses" do
+        a = Pericope("rom. 1:5-6")
+        b = Pericope("Romans 1:5–6")
+        assert_equal a, b, "Expected two pericopes that refer to the same verses to be equal"
+      end
     end
   end
 
 
 
-  def test_equality
-    a = Pericope.new("rom. 1:5-6")
-    b = Pericope.new("Romans 1:5–6")
-    assert_equal a, b, "Expected two pericopes that refer to the same verses to be equal"
+  context "converts itself to and from an array of verse IDs" do
+    setup do
+      @tests = {
+        "Genesis 1:1"       => [1001001],
+        "John 20:19–23"     => [43020019, 43020020, 43020021, 43020022, 43020023],
+        "Psalm 1"           => [19001001, 19001002, 19001003, 19001004, 19001005, 19001006],
+        "Psalm 122:6—124:2" => [19122006, 19122007, 19122008, 19122009, 19123001, 19123002, 19123003, 19123004, 19124001, 19124002] }
+    end
+
+    context "new" do
+      should "accept an array of verses" do
+        @tests.each do |expected_reference, verses|
+          assert_equal expected_reference, Pericope.new(verses).to_s
+        end
+      end
+    end
+
+    context "#to_a" do
+      should "return an array of verses" do
+        @tests.each do |reference, expected_verses|
+          assert_equal expected_verses, Pericope(reference).to_a.map(&:to_i), "Expected #{reference} to map to these verses: #{expected_verses}"
+        end
+      end
+    end
   end
 
 
+
+private
+
+  def Pericope(text)
+    Pericope.parse_one(text)
+  end
 
 end
 
