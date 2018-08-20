@@ -222,14 +222,6 @@ private
     number
   end
 
-  def self.to_verse(book, chapter, verse)
-    book = to_valid_book(book)
-    chapter = to_valid_chapter(book, chapter)
-    verse = to_valid_verse(book, chapter, verse)
-
-    Verse.new(book, chapter, verse)
-  end
-
 
 
   def group_array_into_ranges(verses)
@@ -292,54 +284,62 @@ private
   end
 
   def self.parse_ranges(book, ranges)
-    recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
-    recent_chapter = 1 if !book_has_chapters?(book)
+    default_chapter = nil
+    default_chapter = 1 unless book_has_chapters?(book)
+
     ranges.map do |range|
-      range = range.split('-') # parse the low end of a verse range and the high end separately
-      range << range[0] if (range.length < 2) # treat 12:4 as 12:4-12:4
-      lower_chapter_verse = range[0].split(':').map(&:to_i) # parse "3:28" to [3,28]
-      upper_chapter_verse = range[1].split(':').map(&:to_i) # parse "3:28" to [3,28]
+      range_begin_string, range_end_string = range.split("-")
+
+      # treat 12:4 as 12:4-12:4
+      range_end_string ||= range_begin_string
+
+      range_begin = parse_reference_fragment(range_begin_string, default_chapter: default_chapter)
+
+      # no verse specified; this is a range of chapters, start with verse 1
+      chapter_range = false
+      if range_begin.needs_verse?
+        range_begin.verse = 1
+        chapter_range = true
+      end
+
+      range_begin.chapter = to_valid_chapter(book, range_begin.chapter)
+      range_begin.verse = to_valid_verse(book, range_begin.chapter, range_begin.verse)
+
+      range_end = parse_reference_fragment(range_end_string, default_chapter: (range_begin.chapter unless chapter_range))
+      range_end.chapter = to_valid_chapter(book, range_end.chapter)
 
       # treat Mark 3-1 as Mark 3-3 and, eventually, Mark 3:1-35
-      if (lower_chapter_verse.length == 1) &&
-         (upper_chapter_verse.length == 1) &&
-         (upper_chapter_verse[0] < lower_chapter_verse[0])
-        upper_chapter_verse = lower_chapter_verse.dup
-      end
+      range_end.chapter = range_begin.chapter if range_end.chapter < range_begin.chapter
 
-      # make sure the low end of the range and the high end of the range
-      # are composed of arrays with two appropriate values: [chapter, verse]
-      chapter_range = false
-      if lower_chapter_verse.length < 2
-        if recent_chapter
-          lower_chapter_verse.unshift recent_chapter # e.g. parsing 11 in 12:1-8,11 => remember that 12 is the chapter
-        else
-          lower_chapter_verse[0] = Pericope.to_valid_chapter(book, lower_chapter_verse[0])
-          lower_chapter_verse << 1 # no verse specified; this is a range of chapters, start with verse 1
-          chapter_range = true
-        end
+      # this is a range of chapters, end with the last verse
+      if range_end.needs_verse?
+        range_end.verse = get_max_verse(book, range_end.chapter)
       else
-        lower_chapter_verse[0] = Pericope.to_valid_chapter(book, lower_chapter_verse[0])
+        range_end.verse = to_valid_verse(book, range_end.chapter, range_end.verse)
       end
-      lower_chapter_verse[1] = Pericope.to_valid_verse(book, *lower_chapter_verse)
 
-      if upper_chapter_verse.length < 2
-        if chapter_range
-          upper_chapter_verse[0] = Pericope.to_valid_chapter(book, upper_chapter_verse[0])
-          upper_chapter_verse << Pericope.get_max_verse(book, upper_chapter_verse[0]) # this is a range of chapters, end with the last verse
-        else
-          upper_chapter_verse.unshift lower_chapter_verse[0] # e.g. parsing 8 in 12:1-8 => remember that 12 is the chapter
-        end
-      else
-        upper_chapter_verse[0] = Pericope.to_valid_chapter(book, upper_chapter_verse[0])
-      end
-      upper_chapter_verse[1] = Pericope.to_valid_verse(book, *upper_chapter_verse)
+      # e.g. parsing 11 in 12:1-8,11 => remember that 12 is the chapter
+      default_chapter = range_end.chapter
 
-      recent_chapter = upper_chapter_verse[0] # remember the last chapter
+      Range.new(range_begin.to_verse(book: book), range_end.to_verse(book: book))
+    end
+  end
 
-      Range.new(
-        Pericope.to_verse(book, *lower_chapter_verse),
-        Pericope.to_verse(book, *upper_chapter_verse))
+  def self.parse_reference_fragment(input, default_chapter: nil)
+    chapter, verse = input.split(":")
+    chapter, verse = [default_chapter, chapter] if default_chapter && !verse
+    ReferenceFragment.new(chapter.to_i, verse&.to_i)
+  end
+
+
+
+  ReferenceFragment = Struct.new(:chapter, :verse) do
+    def needs_verse?
+      verse.nil?
+    end
+
+    def to_verse(book:)
+      Verse.new(book, chapter, verse)
     end
   end
 

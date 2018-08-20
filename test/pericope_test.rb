@@ -102,6 +102,24 @@ class PericopeTest < Minitest::Test
 
 
   context "parses the chapter-and-verse notation identifying Bible references:" do
+    context "parse_reference_fragment" do
+      should "split chapter and verse" do
+        assert_equal ref(chapter: 3, verse: 45), Pericope.parse_reference_fragment("3:45")
+      end
+
+      should "ignore default_chapter when the input contains both chapter and verse" do
+        assert_equal ref(chapter: 3, verse: 45), Pericope.parse_reference_fragment("3:45", default_chapter: 11)
+      end
+
+      should "use default_chapter when the input contains only one number" do
+        assert_equal ref(chapter: 11, verse: 45), Pericope.parse_reference_fragment("45", default_chapter: 11)
+      end
+
+      should "leave verse blank when the input contains only one number and default_chapter is nil" do
+        assert_equal ref(chapter: 45), Pericope.parse_reference_fragment("45")
+      end
+    end
+
     context "parse_reference" do
       should "parse a range of verses" do
         assert_equal [r(19001001, 19008009)], Pericope.parse_reference(19, "1-8") # Psalm 1-8
@@ -383,6 +401,10 @@ private
 
   def v(arg)
     Pericope::Verse.parse(arg)
+  end
+
+  def ref(chapter:, verse: nil)
+    Pericope::ReferenceFragment.new(chapter, verse)
   end
 
 end
