@@ -188,9 +188,6 @@ class Pericope
 
 
   def well_formatted_reference(options={})
-    recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
-    recent_chapter = 1 unless book_has_chapters?
-
     verse_range_separator = options.fetch(:verse_range_separator, "–") # en-dash
     chapter_range_separator = options.fetch(:chapter_range_separator, "—") # em-dash
     verse_list_separator = options.fetch(:verse_list_separator, ", ")
@@ -198,8 +195,10 @@ class Pericope
     always_print_verse_range = options.fetch(:always_print_verse_range, false)
     always_print_verse_range = true unless book_has_chapters?
 
-    s = ""
-    ranges.each_with_index do |range, i|
+    recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
+    recent_chapter = 1 unless book_has_chapters?
+
+    ranges.each_with_index.each_with_object("") do |(range, i), s|
       min_chapter = Pericope.get_chapter(range.begin)
       min_verse = Pericope.get_verse(range.begin)
       max_chapter = Pericope.get_chapter(range.end)
@@ -235,8 +234,6 @@ class Pericope
         end
       end
     end
-
-    s
   end
 
 
