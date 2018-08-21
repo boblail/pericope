@@ -20,6 +20,10 @@ class Pericope
       @ranges = Pericope.group_array_into_ranges(arg)
 
     when Range
+      STDERR.puts "DEPRECATION WARNING: instantiating a pericope with a single range is deprecated and will be removed in pericope 1.0.",
+           "",
+           "   You can change `Pericope.new(range)` to `Pericope.new(range.to_a)`",
+           ""
       set_book Pericope.get_book(arg.begin)
       @ranges = [arg]
 
