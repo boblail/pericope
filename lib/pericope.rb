@@ -20,6 +20,10 @@ class Pericope
       @ranges = Pericope.group_array_into_ranges(arg)
 
     when Range
+      STDERR.puts "DEPRECATION WARNING: instantiating a pericope with a single range is deprecated and will be removed in pericope 1.0.",
+           "",
+           "   You can change `Pericope.new(range)` to `Pericope.new(range.to_a)`",
+           ""
       set_book Pericope.get_book(arg.begin)
       @ranges = [arg]
 
@@ -101,8 +105,12 @@ class Pericope
 
 
   def self.sub(text)
-    segments = split(text)
-    segments.inject("") do |text, segment|
+    STDERR.puts "DEPRECATION WARNING: Pericope.sub is deprecated and will be removed in pericope 1.0.",
+         "",
+         "   You can use `Pericope.split` with `inject` to replace pericopes in a block of text",
+         ""
+
+    split(text).inject("") do |text, segment|
       if segment.is_a?(String)
         text << segment
       else
@@ -114,6 +122,8 @@ class Pericope
 
 
   def self.rsub(text)
+    STDERR.puts "DEPRECATION WARNING: Pericope.rsub is deprecated and will be removed in pericope 1.0."
+
     text.gsub(/\{\{(\d{7,8} ?)+\}\}/) do |match|
       ids = match[2...-2].split.collect(&:to_i)
       Pericope.new(ids).to_s
@@ -136,6 +146,10 @@ class Pericope
 
   def hash
     [book, ranges].hash
+  end
+
+  def <=>(other)
+    to_a <=> other.to_a
   end
 
 
@@ -173,6 +187,7 @@ class Pericope
     verse_list_separator = options.fetch(:verse_list_separator, ", ")
     chapter_list_separator = options.fetch(:chapter_list_separator, "; ")
     always_print_verse_range = options.fetch(:always_print_verse_range, false)
+    always_print_verse_range = true unless book_has_chapters?
 
     s = ""
     ranges.each_with_index do |range, i|
@@ -219,9 +234,9 @@ class Pericope
 
   def intersects?(pericope)
     return false unless pericope.is_a?(Pericope)
-    return false unless (self.book == pericope.book)
+    return false unless book == pericope.book
 
-    self.ranges.each do |self_range|
+    ranges.each do |self_range|
       pericope.ranges.each do |other_range|
         return true if (self_range.end >= other_range.begin) and (self_range.begin <= other_range.end)
       end
@@ -373,14 +388,11 @@ private
   end
 
   def self.parse_reference(book, reference)
-    reference = normalize_reference(reference)
-    parse_ranges(book, reference.split(/[,;]/))
+    parse_ranges(book, normalize_reference(reference).split(/[,;]/))
   end
 
   def self.normalize_reference(reference)
-    reference = reference.to_s
-    NORMALIZATIONS.each { |(regex, replacement)| reference.gsub!(regex, replacement) }
-    reference
+    NORMALIZATIONS.reduce(reference.to_s) { |reference, (regex, replacement)| reference.gsub(regex, replacement) }
   end
 
   def self.parse_ranges(book, ranges)

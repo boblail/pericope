@@ -98,8 +98,7 @@ Commands
 
 
   private
-
-
+    attr_reader :options, :input
 
     def initialize(*args)
       @options = extract_options!(*args)
@@ -107,17 +106,8 @@ Commands
       @input = $stdin.read if $stdin.stat.pipe?
     end
 
-
-
-    attr_reader :options, :input
-
-
-
     def extract_options!(*args)
       {} # No options accepted yet
     end
-
-
-
   end
 end
