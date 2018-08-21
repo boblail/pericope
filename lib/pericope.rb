@@ -105,8 +105,12 @@ class Pericope
 
 
   def self.sub(text)
-    segments = split(text)
-    segments.inject("") do |text, segment|
+    STDERR.puts "DEPRECATION WARNING: Pericope.sub is deprecated and will be removed in pericope 1.0.",
+         "",
+         "   You can use `Pericope.split` with `inject` to replace pericopes in a block of text",
+         ""
+
+    split(text).inject("") do |text, segment|
       if segment.is_a?(String)
         text << segment
       else
@@ -118,6 +122,8 @@ class Pericope
 
 
   def self.rsub(text)
+    STDERR.puts "DEPRECATION WARNING: Pericope.rsub is deprecated and will be removed in pericope 1.0."
+
     text.gsub(/\{\{(\d{7,8} ?)+\}\}/) do |match|
       ids = match[2...-2].split.collect(&:to_i)
       Pericope.new(ids).to_s
