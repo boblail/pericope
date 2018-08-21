@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pericope (0.7.1)
+    pericope (0.7.2)
 
 GEM
   remote: http://rubygems.org/
