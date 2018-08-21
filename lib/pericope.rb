@@ -1,5 +1,6 @@
 require "pericope/version"
 require "pericope/data"
+require "pericope/range"
 
 class Pericope
   attr_reader :book, :original_string, :ranges
@@ -128,25 +129,7 @@ class Pericope
 
 
   def to_a
-    # one range per chapter
-    chapter_ranges = []
-    ranges.each do |range|
-      min_chapter = Pericope.get_chapter(range.begin)
-      max_chapter = Pericope.get_chapter(range.end)
-      if min_chapter == max_chapter
-        chapter_ranges << range
-      else
-        chapter_ranges << Range.new(range.begin, Pericope.get_last_verse(book, min_chapter))
-        for chapter in (min_chapter+1)...max_chapter
-          chapter_ranges << Range.new(
-            Pericope.get_first_verse(book, chapter),
-            Pericope.get_last_verse(book, chapter))
-        end
-        chapter_ranges << Range.new(Pericope.get_first_verse(book, max_chapter), range.end)
-      end
-    end
-
-    chapter_ranges.inject([]) {|array, range| array.concat(range.to_a)}
+    ranges.reduce([]) { |a, range| a.concat(range.to_a) }
   end
 
 
@@ -187,8 +170,7 @@ class Pericope
           s << "#{min_chapter}:#{min_verse}"
         end
 
-        if range.count > 1
-
+        if range.begin != range.end
           if min_chapter == max_chapter
             s << "#{verse_range_separator}#{max_verse}"
           else
@@ -304,12 +286,12 @@ private
          (verse == Pericope.get_start_of_next_chapter(range_end))
         range_end = verse
       else
-        ranges << (range_begin..range_end)
+        ranges << Range.new(range_begin, range_end)
         range_begin = range_end = verse
       end
     end
 
-    ranges << (range_begin..range_end)
+    ranges << Range.new(range_begin, range_end)
   end
 
 

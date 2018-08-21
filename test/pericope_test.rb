@@ -104,28 +104,28 @@ class PericopeTest < Minitest::Test
   context "parses the chapter-and-verse notation identifying Bible references:" do
     context "parse_reference" do
       should "parse a range of verses" do
-        assert_equal [19001001..19008009], Pericope.parse_reference(19, "1-8") # Psalm 1-8
+        assert_equal [r(19001001, 19008009)], Pericope.parse_reference(19, "1-8") # Psalm 1-8
       end
 
       should "parse a range of verses that spans a chapter" do
-        assert_equal [43012001..43013008], Pericope.parse_reference(43, "12:1–13:8") # John 12:1–13:8
+        assert_equal [r(43012001, 43013008)], Pericope.parse_reference(43, "12:1–13:8") # John 12:1–13:8
       end
 
       should "parse a single verse as a range of one" do
-        assert_equal [60001001..60001001], Pericope.parse_reference(60, "1:1") # 1 Peter 1:1
+        assert_equal [r(60001001)], Pericope.parse_reference(60, "1:1") # 1 Peter 1:1
       end
 
       should "parse a chapter into a range of verses in that chapter" do
-        assert_equal [1001001..1001031], Pericope.parse_reference(1, "1") # Genesis 1
+        assert_equal [r(1001001, 1001031)], Pericope.parse_reference(1, "1") # Genesis 1
       end
 
       should "parse multiple ranges into an array of ranges" do
         expected_ranges = [
-          40003001..40003001,
-          40003003..40003003,
-          40003004..40003005,
-          40003007..40003007,
-          40004019..40004019 ]
+          r(40003001),
+          r(40003003),
+          r(40003004, 40003005),
+          r(40003007),
+          r(40004019) ]
 
         tests = [
           "3:1,3,4-5,7; 4:19",
@@ -141,30 +141,30 @@ class PericopeTest < Minitest::Test
         tests = ["1:4-9", "1\"4-9", "1.4-9", "1 :4-9", "1: 4-9"]
 
         tests.each do |input|
-          assert_equal [28001004..28001009], Pericope.parse_reference(28, input)
+          assert_equal [r(28001004, 28001009)], Pericope.parse_reference(28, input)
         end
       end
 
       should "ignore \"a\" and \"b\"" do
-        assert_equal [39002006..39002009], Pericope.parse_reference(39, "2:6a-9b")
+        assert_equal [r(39002006, 39002009)], Pericope.parse_reference(39, "2:6a-9b")
       end
 
       should "work correctly on books with no chapters" do
-        assert_equal [65001008..65001010], Pericope.parse_reference(65, "8–10")
+        assert_equal [r(65001008, 65001010)], Pericope.parse_reference(65, "8–10")
       end
 
       should "ignore chapter notation for chapterless books" do
-        assert_equal [57001008..57001010], Pericope.parse_reference(57, "6:8–10")
+        assert_equal [r(57001008, 57001010)], Pericope.parse_reference(57, "6:8–10")
       end
 
       should "coerce verses to the right range" do
-        assert_equal [41001045..41001045], Pericope.parse_reference(41, "1:452")
-        assert_equal [41001001..41001001], Pericope.parse_reference(41, "1:0")
+        assert_equal [r(41001045)], Pericope.parse_reference(41, "1:452")
+        assert_equal [r(41001001)], Pericope.parse_reference(41, "1:0")
       end
 
       should "coerce chapters to the right range" do
-        assert_equal [43021001..43021001], Pericope.parse_reference(43, "28:1")
-        assert_equal [43001001..43001001], Pericope.parse_reference(43, "0:1")
+        assert_equal [r(43021001)], Pericope.parse_reference(43, "28:1")
+        assert_equal [r(43001001)], Pericope.parse_reference(43, "0:1")
       end
     end
   end
@@ -176,13 +176,13 @@ class PericopeTest < Minitest::Test
       should "work" do
         pericope = Pericope.parse_one("ps 1:1-6")
         assert_equal "Psalm", pericope.book_name
-        assert_equal [19001001..19001006], pericope.ranges
+        assert_equal [r(19001001, 19001006)], pericope.ranges
       end
 
       should "work even when there is no space between the book name and reference" do
         pericope = Pericope.parse_one("ps1")
         assert_equal "Psalm", pericope.book_name
-        assert_equal [19001001..19001006], pericope.ranges
+        assert_equal [r(19001001, 19001006)], pericope.ranges
       end
 
       should "return nil for an invalid reference" do
@@ -358,6 +358,10 @@ private
 
   def Pericope(text)
     Pericope.parse_one(text)
+  end
+
+  def r(low, high = low)
+    Pericope::Range.new(low, high)
   end
 
 end
