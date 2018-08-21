@@ -62,7 +62,7 @@ class Pericope
     end
 
     def match_all(text)
-      text.scan(Pericope::PERICOPE_PATTERN) do
+      text.scan(Pericope.regexp) do
         match = Regexp.last_match
         book = BOOK_IDS[match.captures.find_index(&:itself)]
 
@@ -84,12 +84,13 @@ class Pericope
     end
 
     def normalize_reference(reference)
-      NORMALIZATIONS.reduce(reference.to_s) { |reference, (regex, replacement)| reference.gsub(regex, replacement) }
+      normalizations.reduce(reference.to_s) { |reference, (regex, replacement)| reference.gsub(regex, replacement) }
     end
 
     def parse_ranges(book, ranges)
       default_chapter = nil
       default_chapter = 1 unless book_has_chapters?(book)
+      default_verse = nil
 
       ranges.map do |range|
         range_begin_string, range_end_string = range.split("-")
@@ -97,7 +98,7 @@ class Pericope
         # treat 12:4 as 12:4-12:4
         range_end_string ||= range_begin_string
 
-        range_begin = parse_reference_fragment(range_begin_string, default_chapter: default_chapter)
+        range_begin = parse_reference_fragment(range_begin_string, default_chapter: default_chapter, default_verse: default_verse)
 
         # no verse specified; this is a range of chapters, start with verse 1
         chapter_range = false
@@ -109,30 +110,48 @@ class Pericope
         range_begin.chapter = to_valid_chapter(book, range_begin.chapter)
         range_begin.verse = to_valid_verse(book, range_begin.chapter, range_begin.verse)
 
-        range_end = parse_reference_fragment(range_end_string, default_chapter: (range_begin.chapter unless chapter_range))
-        range_end.chapter = to_valid_chapter(book, range_end.chapter)
-
-        # treat Mark 3-1 as Mark 3-3 and, eventually, Mark 3:1-35
-        range_end.chapter = range_begin.chapter if range_end.chapter < range_begin.chapter
-
-        # this is a range of chapters, end with the last verse
-        if range_end.needs_verse?
-          range_end.verse = get_max_verse(book, range_end.chapter)
+        if range_begin_string == range_end_string && !chapter_range
+          range_end = range_begin.dup
         else
-          range_end.verse = to_valid_verse(book, range_end.chapter, range_end.verse)
+          range_end = parse_reference_fragment(range_end_string, default_chapter: (range_begin.chapter unless chapter_range))
+          range_end.chapter = to_valid_chapter(book, range_end.chapter)
+
+          # treat Mark 3-1 as Mark 3-3 and, eventually, Mark 3:1-35
+          range_end.chapter = range_begin.chapter if range_end.chapter < range_begin.chapter
+
+          # this is a range of chapters, end with the last verse
+          if range_end.needs_verse?
+            range_end.verse = get_max_verse(book, range_end.chapter)
+          else
+            range_end.verse = to_valid_verse(book, range_end.chapter, range_end.verse)
+          end
         end
 
         # e.g. parsing 11 in 12:1-8,11 => remember that 12 is the chapter
         default_chapter = range_end.chapter
 
-        Range.new(range_begin.to_verse(book: book), range_end.to_verse(book: book))
+        # e.g. parsing c in 9:12a, c => remember that 12 is the verse
+        default_verse = range_end.verse
+
+        range = Range.new(range_begin.to_verse(book: book), range_end.to_verse(book: book))
+
+        # an 'a' at the beginning of a range is redundant
+        range.begin.letter = nil if range.begin.letter == "a" && range.end.to_i > range.begin.to_i
+
+        # a 'c' at the end of a range is redundant
+        range.end.letter = nil if range.end.letter == max_letter && range.end.to_i > range.begin.to_i
+
+        range
       end
     end
 
-    def parse_reference_fragment(input, default_chapter: nil)
-      chapter, verse = input.split(":")
-      chapter, verse = [default_chapter, chapter] if default_chapter && !verse
-      ReferenceFragment.new(chapter.to_i, verse&.to_i)
+    def parse_reference_fragment(input, default_chapter: nil, default_verse: nil)
+      chapter, verse, letter = input.match(Pericope.fragment_regexp).captures
+      chapter = default_chapter unless chapter
+      chapter, verse = [verse, nil] unless chapter
+      verse = default_verse unless verse
+      letter = nil unless verse
+      ReferenceFragment.new(chapter.to_i, verse&.to_i, letter)
     end
 
     def to_valid_chapter(book, chapter)
@@ -150,13 +169,13 @@ class Pericope
     end
 
 
-    ReferenceFragment = Struct.new(:chapter, :verse) do
+    ReferenceFragment = Struct.new(:chapter, :verse, :letter) do
       def needs_verse?
         verse.nil?
       end
 
       def to_verse(book:)
-        Verse.new(book, chapter, verse)
+        Verse.new(book, chapter, verse, letter)
       end
     end
   end
@@ -241,22 +260,5 @@ class Pericope
   BOOK_IDS = [ 64, 10, 12, 14, 63, 47, 53, 55, 61, 9, 11, 13, 62, 46, 52, 54, 60, 1, 2, 3, 4, 5, 6,  7, 8, 23, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 48, 49, 50, 51, 56, 57, 58, 59, 65, 66 ].freeze
 
   BOOK_NAMES = [nil, "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalm", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"].freeze
-
-  REFERENCE_PATTERN = begin
-    number = '\d{1,3}'
-    verse = "#{number}[ab]?"
-    chapter_verse_separator = '\s*[:"\.]\s*'
-    list_or_range_separator = '\s*[\-–—,;]\s*'
-    chapter_and_verse = "(?:#{number + chapter_verse_separator})?" + verse
-    chapter_and_verse + "(?:#{list_or_range_separator + chapter_and_verse})*"
-  end
-
-  PERICOPE_PATTERN = /#{BOOK_PATTERN.source.gsub(/[ \n]/, "")}\.?\s*(#{REFERENCE_PATTERN})/i
-
-  NORMALIZATIONS = [
-    [/(\d+)[".](\d+)/, '\1:\2'], # 12"5 and 12.5 -> 12:5
-    [/[–—]/,           '-'],     # convert em dash and en dash to -
-    [/[^0-9,:;\-–—]/,  '']       # remove everything but [0-9,;:-]
-  ]
 
 end

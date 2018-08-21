@@ -2,6 +2,10 @@ require "test_helper"
 
 class PericopeTest < Minitest::Test
 
+  def setup
+    Pericope.max_letter = "d"
+  end
+
 
   context "quickly recognizes Bible references:" do
     context "BOOK_PATTERN" do
@@ -22,12 +26,12 @@ class PericopeTest < Minitest::Test
       end
     end
 
-    context "PERICOPE_PATTERN" do
+    context "regexp" do
       should "match things that look like pericopes" do
         tests = [ "Romans 3:9" ]
 
         tests.each do |input|
-          assert input[Pericope::PERICOPE_PATTERN], "Expected Pericope to recognize \"#{input}\" as a potential pericope"
+          assert input[Pericope.regexp], "Expected Pericope to recognize \"#{input}\" as a potential pericope"
         end
       end
 
@@ -35,7 +39,7 @@ class PericopeTest < Minitest::Test
         tests = [ "Cross 1", "Hezekiah 4:3" ]
 
         tests.each do |input|
-          refute input[Pericope::PERICOPE_PATTERN], "Expected Pericope to recognize that \"#{input}\" is not a potential pericope"
+          refute input[Pericope.regexp], "Expected Pericope to recognize that \"#{input}\" is not a potential pericope"
         end
       end
     end
@@ -163,8 +167,23 @@ class PericopeTest < Minitest::Test
         end
       end
 
-      should "ignore \"a\" and \"b\"" do
-        assert_equal [r(39002006, 39002009)], Pericope.parse_reference(39, "2:6a-9b")
+      should "resolve partial-verses with \"a\" and \"b\"" do
+        assert_equal [r("39002006b", "39002009a")], Pericope.parse_reference(39, "2:6b-9a")
+        assert_equal [r("39002006b"), r("39002009a")], Pericope.parse_reference(39, "2:6b, 9a")
+      end
+
+      should "ignore \"a\" when a range starts with it" do
+        assert_equal [r(39002006, 39002009)], Pericope.parse_reference(39, "2:6a-9")
+      end
+
+      should "allow a range to end with a \"b\" if Pericope.max_letter >= \"c\"" do
+        assert_equal [r("39002006", "39002009b")], Pericope.parse_reference(39, "2:6-9b")
+        Pericope.max_letter = "b"
+        assert_equal [r(39002006, 39002009)], Pericope.parse_reference(39, "2:6-9b")
+      end
+
+      should "parse e.g. \"9:12a, c\"" do
+        assert_equal [r("58009012a"), r("58009012c")], Pericope.parse_reference(58, "9:12a, c")
       end
 
       should "work correctly on books with no chapters" do
@@ -216,7 +235,7 @@ class PericopeTest < Minitest::Test
           "mt 12:13. "                        => "Matthew 12:13",
           "Luke 2---Maris "                   => "Luke 2",
           "Luke 3\"1---Aliquam "              => "Luke 3:1",
-          "(Acts 13:4-20)"                    => "Acts 13:4–20" }
+          "(Acts 13:4-20a)"                   => "Acts 13:4–20a" }
 
         tests.each do |input, expected_pericope|
           assert_equal expected_pericope, Pericope.parse_one(input).to_s, "Expected to find \"#{expected_pericope}\" in \"#{input}\""
@@ -244,8 +263,8 @@ class PericopeTest < Minitest::Test
 
       should "standardize chapter-and-verse notation" do
         tests = {
-          "James 4:7"              => ["jas 4:7", "james 4:7", "James 4.7", "jas 4 :7", "jas 4: 7"],
-          "Mark 1:1–17; 2:3–5, 17" => ["mk 1:1-17,2:3-5,17"] }
+          "James 4:7"                => ["jas 4:7", "james 4:7", "James 4.7", "jas 4 :7", "jas 4: 7"],
+          "Mark 1:1b–17; 2:3–5, 17a" => ["mk 1:1b-17,2:3-5,17a"], }
 
         tests.each do |expected_result, inputs|
           inputs.each do |input|
@@ -256,8 +275,20 @@ class PericopeTest < Minitest::Test
       end
 
 
+      should "not repeat a verse number when displaying two partials of the same verse" do
+        assert_equal "John 21:24a, c", Pericope("John 21:24a, 21:24c").to_s
+      end
+
       should "omit verses when describing the entire chapter of a book" do
         assert_equal "Psalm 1", Pericope("Psalm 1:1-6").to_s
+      end
+
+      should "not consider the whole chapter read if the range excludes part of the first verse" do
+        assert_equal "Psalm 1:1b–6", Pericope("Psalm 1:1b–6").to_s
+      end
+
+      should "not consider the whole chapter read if the range excludes part of the last verse" do
+        assert_equal "Psalm 1:1–6a", Pericope("Psalm 1:1–6a").to_s
       end
 
       should "never omit verses when describing all the verses in chapterless book" do
@@ -293,12 +324,12 @@ class PericopeTest < Minitest::Test
   context "picks pericopes out of a paragraph of text:" do
     context "split" do
       should "split text from pericopes" do
-        text = "Paul, rom. 12:1-4, Romans 9:7, 11, Election, Theology of Glory, Theology of the Cross, 1 Cor 15, Resurrection"
+        text = "Paul, rom. 12:1-4, Romans 9:7b, 11, Election, Theology of Glory, Theology of the Cross, 1 Cor 15, Resurrection"
         expected_fragments = [
           "Paul, ",
           Pericope("Romans 12:1–4"),
           ", ",
-          Pericope("Romans 9:7, 11"),
+          Pericope("Romans 9:7b, 11"),
           ", Election, Theology of Glory, Theology of the Cross, ",
           Pericope("1 Corinthians 15"),
           ", Resurrection"
@@ -344,27 +375,34 @@ class PericopeTest < Minitest::Test
 
 
 
-  context "converts itself to and from an array of verse IDs" do
+  context "converts itself to and from an array of verse IDs:" do
     setup do
       @tests = {
-        "Genesis 1:1"       => [1001001],
-        "John 20:19–23"     => [43020019, 43020020, 43020021, 43020022, 43020023],
-        "Psalm 1"           => [19001001, 19001002, 19001003, 19001004, 19001005, 19001006],
-        "Psalm 122:6—124:2" => [19122006, 19122007, 19122008, 19122009, 19123001, 19123002, 19123003, 19123004, 19124001, 19124002] }
+        "Genesis 1:1"       => %w{1001001},
+        "John 20:19–23"     => %w{43020019 43020020 43020021 43020022 43020023},
+        "Psalm 1"           => %w{19001001 19001002 19001003 19001004 19001005 19001006},
+        "Psalm 122:6—124:2" => %w{19122006 19122007 19122008 19122009 19123001 19123002 19123003 19123004 19124001 19124002},
+
+        "Romans 3:1–4a"     => %w{45003001 45003002 45003003 45003004a},
+        "Romans 3:1–4b"     => %w{45003001 45003002 45003003 45003004a 45003004b},
+        "Romans 3:1b–4"     => %w{45003001b 45003001c 45003001d 45003002 45003003 45003004},
+        "Romans 3:1b, 2–4"  => %w{45003001b 45003002 45003003 45003004},
+        "Luke 1:17a, d"     => %w{42001017a 42001017d} }
     end
 
     context "new" do
       should "accept an array of verses" do
         @tests.each do |expected_reference, verses|
-          assert_equal expected_reference, Pericope.new(verses).to_s
+          assert_equal expected_reference, Pericope.new(verses).to_s, "Given %w{#{verses.join(" ")}}"
         end
       end
 
       should "chain successive verses into ranges" do
         tests = [
-          [[43020019, 43020020, 43020021, 43020022, 43020023], [r(43020019, 43020023)]],               # John 20:19–23
-          [[19122007, 19122008, 19122009, 19123001, 19123002], [r(19122007, 19123002)]],               # Psalm 122:7—123:2
-          [[19122007, 19122008, 19123001, 19123002], [r(19122007, 19122008), r(19123001, 19123002)]] ] # Psalm 122:7–8, 123:1–2
+          [%w{43020019 43020020 43020021 43020022 43020023}, [r(43020019, 43020023)]],                # John 20:19–23
+          [%w{43020019 43020020 43020021 43020022a}, [r(43020019, "43020022a")]],                     # John 20:19–23a
+          [%w{19122007 19122008 19122009 19123001 19123002}, [r(19122007, 19123002)]],                # Psalm 122:7—123:2
+          [%w{19122007 19122008 19123001 19123002}, [r(19122007, 19122008), r(19123001, 19123002)]] ] # Psalm 122:7–8, 123:1–2
 
         tests.each do |(verses, ranges)|
           assert_equal ranges, Pericope.new(verses).ranges
@@ -375,7 +413,7 @@ class PericopeTest < Minitest::Test
     context "#to_a" do
       should "return an array of verses" do
         @tests.each do |reference, expected_verses|
-          assert_equal expected_verses, Pericope(reference).to_a.map(&:to_i), "Expected #{reference} to map to these verses: #{expected_verses}"
+          assert_equal expected_verses, Pericope(reference).to_a.map(&:to_id), "Given #{reference}"
         end
       end
 

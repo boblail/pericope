@@ -86,6 +86,19 @@ class Pericope
 
 
   class << self
+    attr_reader :max_letter
+
+    def max_letter=(value)
+      unless @max_letter == value
+        @max_letter = value.freeze
+        @_letters = nil
+        @_regexp = nil
+        @_normalizations = nil
+        @_letter_regexp = nil
+        @_fragment_regexp = nil
+      end
+    end
+
     def book_has_chapters?(book)
       BOOK_CHAPTER_COUNTS[book] > 1
     end
@@ -98,6 +111,46 @@ class Pericope
     def get_max_chapter(book)
       BOOK_CHAPTER_COUNTS[book]
     end
+
+    def regexp
+      @_regexp ||= /#{book_pattern}\.?\s*(#{reference_pattern})/i
+    end
+
+    def normalizations
+      @_normalizations ||= [
+        [/(\d+)[".](\d+)/, '\1:\2'],        # 12"5 and 12.5 -> 12:5
+        [/[–—]/,           '-'],            # convert em dash and en dash to -
+        [/[^0-9,:;\-–—#{letters}]/,  ''] ]  # remove everything but recognized symbols
+    end
+
+    def letter_regexp
+      @_letter_regexp ||= /[#{letters}]$/
+    end
+
+    def fragment_regexp
+      @_fragment_regexp ||= /^(?:(?<chapter>\d{1,3}):)?(?<verse>\d{1,3})?(?<letter>[#{letters}])?$/
+    end
+
+  private
+
+    def book_pattern
+      BOOK_PATTERN.source.gsub(/[ \n]/, "")
+    end
+
+    def reference_pattern
+      number = '\d{1,3}'
+      verse = "#{number}[#{letters}]?"
+      chapter_verse_separator = '\s*[:"\.]\s*'
+      list_or_range_separator = '\s*[\-–—,;]\s*'
+      chapter_and_verse = "(?:#{number + chapter_verse_separator})?" + verse
+      chapter_and_verse_or_letter = "(?:#{chapter_and_verse}|[#{letters}])"
+      chapter_and_verse + "(?:#{list_or_range_separator + chapter_and_verse_or_letter})*"
+    end
+
+    def letters
+      @_letters ||= ("a"..max_letter).to_a.join
+    end
+
   end
 
 
@@ -113,6 +166,7 @@ private
 
     recent_chapter = nil # e.g. in 12:1-8, remember that 12 is the chapter when we parse the 8
     recent_chapter = 1 unless book_has_chapters?
+    recent_verse = nil
 
     ranges.each_with_index.each_with_object("") do |(range, i), s|
       if i > 0
@@ -123,11 +177,16 @@ private
         end
       end
 
-      if range.begin.verse == 1 && range.end.verse >= Pericope.get_max_verse(book, range.end.chapter) && !always_print_verse_range
+      last_verse = Pericope.get_max_verse(book, range.end.chapter)
+      if !always_print_verse_range && range.begin.verse == 1 && range.begin.whole? && (range.end.verse > last_verse || range.end.whole? && range.end.verse == last_verse)
         s << range.begin.chapter.to_s
         s << "#{chapter_range_separator}#{range.end.chapter}" if range.end.chapter > range.begin.chapter
       else
-        s << range.begin.to_s(with_chapter: recent_chapter != range.begin.chapter)
+        if range.begin.partial? && range.begin.verse == recent_verse
+          s << range.begin.letter
+        else
+          s << range.begin.to_s(with_chapter: recent_chapter != range.begin.chapter)
+        end
 
         if range.begin != range.end
           if range.begin.chapter == range.end.chapter
@@ -138,6 +197,7 @@ private
         end
 
         recent_chapter = range.end.chapter
+        recent_verse = range.end.verse if range.end.partial?
       end
     end
   end
@@ -151,11 +211,11 @@ private
     range_begin = verses.shift
     range_end = range_begin
     while verse = verses.shift
-      if verse == range_end.next
-        range_end = verse
-      else
+      if verse > range_end.next
         ranges << Range.new(range_begin, range_end)
         range_begin = range_end = verse
+      else
+        range_end = verse
       end
     end
 
@@ -163,3 +223,5 @@ private
   end
 
 end
+
+Pericope.max_letter = "d"

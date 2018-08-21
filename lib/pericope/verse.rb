@@ -1,8 +1,8 @@
 class Pericope
-  Verse = Struct.new(:book, :chapter, :verse) do
+  Verse = Struct.new(:book, :chapter, :verse, :letter) do
     include Comparable
 
-    def initialize(book, chapter, verse)
+    def initialize(book, chapter, verse, letter=nil)
       super
 
       raise ArgumentError, "#{book} is not a valid book" if book < 1 || book > 66
@@ -16,11 +16,16 @@ class Pericope
       book = id / 1000000 # the book is everything left of the least significant 6 digits
       chapter = (id % 1000000) / 1000 # the chapter is the 3rd through 6th most significant digits
       verse = id % 1000 # the verse is the 3 least significant digits
-      new(book, chapter, verse)
+      letter = input[Pericope.letter_regexp] if input.is_a?(String)
+      new(book, chapter, verse, letter)
     end
 
     def <=>(other)
-      to_a <=> other.to_a
+      [ book, chapter, verse, letter || "a" ] <=> [ other.book, other.chapter, other.verse, other.letter || "a" ]
+    end
+
+    def ==(other)
+      to_a == other.to_a
     end
 
     def to_i
@@ -28,11 +33,32 @@ class Pericope
     end
     alias :number :to_i
 
+    def to_id
+      "#{to_i}#{letter}"
+    end
+
     def to_s(with_chapter: false)
-      with_chapter ? "#{chapter}:#{verse}" : verse.to_s
+      with_chapter ? "#{chapter}:#{verse}#{letter}" : "#{verse}#{letter}"
+    end
+
+    def partial?
+      !letter.nil?
+    end
+
+    def whole?
+      letter.nil?
+    end
+
+    def whole
+      return self unless partial?
+      self.class.new(book, chapter, verse)
     end
 
     def next
+      if partial? && (next_letter = letter.succ) <= Pericope.max_letter
+        return self.class.new(book, chapter, verse, next_letter)
+      end
+
       next_verse = verse + 1
       if next_verse > Pericope.get_max_verse(book, chapter)
         next_chapter = chapter + 1

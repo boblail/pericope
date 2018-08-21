@@ -27,11 +27,26 @@ class Pericope
     def each
       return to_enum unless block_given?
 
+      if self.begin == self.end
+        yield self.begin
+        return self
+      end
+
       current = self.begin
-      while current <= self.end
+      last_verse = self.end.whole
+      while current < last_verse
         yield current
         current = current.succ
       end
+
+      if self.end.partial?
+        "a".upto(self.end.letter).each do |letter|
+          yield Verse.new(self.end.book, self.end.chapter, self.end.verse, letter)
+        end
+      else
+        yield self.end
+      end
+
       self
     end
 
