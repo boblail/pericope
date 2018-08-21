@@ -129,6 +129,12 @@ class PericopeTest < Minitest::Test
       ["philemon 8-10", "philemon 6:8-10"] => "Philemon 8–10",                          # test book with no chapters
       ["phil 1:1-17,2:3-5,17"] => "Philippians 1:1–17; 2:3–5, 17",                      # test comma-separated ranges
 
+      # omits verses when describing an entire chapter...
+      ["Psalm 1:1-6"] => "Psalm 1",
+
+      # ...except when the book has only a single chapter
+      ["Jude 1–25"] => "Jude 1–25",
+
       # test the values embedded in the pericope extraction
       ["Psalm 37:3–7a, 23–24, 39–40"] => "Psalm 37:3–7, 23–24, 39–40",
       ["John 20:19–23"] => "John 20:19–23",

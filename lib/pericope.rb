@@ -183,6 +183,7 @@ class Pericope
     verse_list_separator = options.fetch(:verse_list_separator, ", ")
     chapter_list_separator = options.fetch(:chapter_list_separator, "; ")
     always_print_verse_range = options.fetch(:always_print_verse_range, false)
+    always_print_verse_range = true unless book_has_chapters?
 
     s = ""
     ranges.each_with_index do |range, i|
