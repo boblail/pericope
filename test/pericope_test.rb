@@ -404,7 +404,7 @@ private
   end
 
   def ref(chapter:, verse: nil)
-    Pericope::ReferenceFragment.new(chapter, verse)
+    Pericope::Parsing::ReferenceFragment.new(chapter, verse)
   end
 
 end
