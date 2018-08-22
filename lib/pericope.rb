@@ -291,18 +291,16 @@ private
 
 
 
-  def group_array_into_ranges(array)
-    return [] if array.nil? or array.empty?
+  def group_array_into_ranges(verses)
+    return [] if verses.nil? or verses.empty?
 
-    array.flatten!
-    array.compact!
-    array.sort!
+    verses = verses.flatten.compact.sort
 
     ranges = []
-    range_start = array.shift
+    range_start = verses.shift
     range_end = range_start
     while true
-      next_value = array.shift
+      next_value = verses.shift
       break if next_value.nil?
 
       if (next_value == Pericope.get_next_verse(range_end)) ||
