@@ -297,8 +297,8 @@ private
     verses = verses.flatten.compact.sort
 
     ranges = []
-    range_start = verses.shift
-    range_end = range_start
+    range_begin = verses.shift
+    range_end = range_begin
     while true
       next_value = verses.shift
       break if next_value.nil?
@@ -307,11 +307,11 @@ private
          (next_value == Pericope.get_start_of_next_chapter(range_end))
         range_end = next_value
       else
-        ranges << (range_start..range_end)
-        range_start = range_end = next_value
+        ranges << (range_begin..range_end)
+        range_begin = range_end = next_value
       end
     end
-    ranges << (range_start..range_end)
+    ranges << (range_begin..range_end)
 
     ranges
   end
