@@ -299,21 +299,17 @@ private
     ranges = []
     range_begin = verses.shift
     range_end = range_begin
-    while true
-      next_value = verses.shift
-      break if next_value.nil?
-
-      if (next_value == Pericope.get_next_verse(range_end)) ||
-         (next_value == Pericope.get_start_of_next_chapter(range_end))
-        range_end = next_value
+    while verse = verses.shift
+      if (verse == Pericope.get_next_verse(range_end)) ||
+         (verse == Pericope.get_start_of_next_chapter(range_end))
+        range_end = verse
       else
         ranges << (range_begin..range_end)
-        range_begin = range_end = next_value
+        range_begin = range_end = verse
       end
     end
-    ranges << (range_begin..range_end)
 
-    ranges
+    ranges << (range_begin..range_end)
   end
 
 
