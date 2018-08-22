@@ -17,7 +17,7 @@ class Pericope
     when Array
       arg = arg.map(&:to_i)
       @book = Pericope.get_book(arg.first)
-      @ranges = Pericope.group_array_into_ranges(arg)
+      @ranges = group_array_into_ranges(arg)
 
     else
       attributes = arg
@@ -291,7 +291,7 @@ private
 
 
 
-  def self.group_array_into_ranges(array)
+  def group_array_into_ranges(array)
     return [] if array.nil? or array.empty?
 
     array.flatten!
@@ -305,8 +305,8 @@ private
       next_value = array.shift
       break if next_value.nil?
 
-      if (next_value == get_next_verse(range_end)) ||
-         (next_value == get_start_of_next_chapter(range_end))
+      if (next_value == Pericope.get_next_verse(range_end)) ||
+         (next_value == Pericope.get_start_of_next_chapter(range_end))
         range_end = next_value
       else
         ranges << (range_start..range_end)
