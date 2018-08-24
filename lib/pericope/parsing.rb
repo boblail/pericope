@@ -242,9 +242,16 @@ class Pericope
 
   BOOK_NAMES = [nil, "Genesis", "Exodus", "Leviticus", "Numbers", "Deuteronomy", "Joshua", "Judges", "Ruth", "1 Samuel", "2 Samuel", "1 Kings", "2 Kings", "1 Chronicles", "2 Chronicles", "Ezra", "Nehemiah", "Esther", "Job", "Psalm", "Proverbs", "Ecclesiastes", "Song of Solomon", "Isaiah", "Jeremiah", "Lamentations", "Ezekiel", "Daniel", "Hosea", "Joel", "Amos", "Obadiah", "Jonah", "Micah", "Nahum", "Habakkuk", "Zephaniah", "Haggai", "Zechariah", "Malachi", "Matthew", "Mark", "Luke", "John", "Acts", "Romans", "1 Corinthians", "2 Corinthians", "Galatians", "Ephesians", "Philippians", "Colossians", "1 Thessalonians", "2 Thessalonians", "1 Timothy", "2 Timothy", "Titus", "Philemon", "Hebrews", "James", "1 Peter", "2 Peter", "1 John", "2 John", "3 John", "Jude", "Revelation"].freeze
 
-  REFERENCE_PATTERN = '(?:\s*\d{1,3})(?:\s*[:\"\.]\s*\d{1,3}[ab]?(?:\s*[,;]\s*(?:\d{1,3}[:\"\.])?\s*\d{1,3}[ab]?)*)?(?:\s*[-–—]\s*(?:\d{1,3}\s*[:\"\.])?(?:\d{1,3}[ab]?)(?:\s*[,;]\s*(?:\d{1,3}\s*[:\"\.])?\s*\d{1,3}[ab]?)*)*'
+  REFERENCE_PATTERN = begin
+    number = '\d{1,3}'
+    verse = "#{number}[ab]?"
+    chapter_verse_separator = '\s*[:"\.]\s*'
+    list_or_range_separator = '\s*[\-–—,;]\s*'
+    chapter_and_verse = "(?:#{number + chapter_verse_separator})?" + verse
+    chapter_and_verse + "(?:#{list_or_range_separator + chapter_and_verse})*"
+  end
 
-  PERICOPE_PATTERN = /#{BOOK_PATTERN.source.gsub(/[ \n]/, "")}\.?(#{REFERENCE_PATTERN})/i
+  PERICOPE_PATTERN = /#{BOOK_PATTERN.source.gsub(/[ \n]/, "")}\.?\s*(#{REFERENCE_PATTERN})/i
 
   NORMALIZATIONS = [
     [/(\d+)[".](\d+)/, '\1:\2'], # 12"5 and 12.5 -> 12:5
