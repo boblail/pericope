@@ -4,6 +4,7 @@ require "pericope/parsing"
 
 class Pericope
   extend Pericope::Parsing
+  include Enumerable
 
   attr_reader :book, :original_string, :ranges
 
@@ -80,8 +81,16 @@ class Pericope
   end
 
 
-  def to_a
-    ranges.reduce([]) { |a, range| a.concat(range.to_a) }
+  def each
+    return to_enum unless block_given?
+
+    ranges.each do |range|
+      range.each do |verse|
+        yield verse
+      end
+    end
+
+    self
   end
 
 
