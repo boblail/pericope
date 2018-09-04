@@ -4,11 +4,7 @@ require "cli/base"
 class Pericope
   class CLI
 
-
-
-    ALLOWED_COMMANDS = %w{help normalize parse substitute reverse-substitute usage}
-
-
+    ALLOWED_COMMANDS = %w{help normalize parse usage}
 
     def self.run(command, *args)
       if ALLOWED_COMMANDS.member?(command)
@@ -56,26 +52,6 @@ Glossary
 
 
 
-    def substitute
-      begin
-        print Pericope.sub(input)
-      rescue
-        print $!.to_s
-      end
-    end
-
-
-
-    def reverse_substitute
-      begin
-        print Pericope.rsub(input)
-      rescue
-        print $!.to_s
-      end
-    end
-
-
-
     def usage
       print <<-USAGE
 
@@ -88,8 +64,6 @@ Commands
   help                Prints more information about pericope
   normalize           Accepts a pericope and returns a properly-formatted pericope
   parse               Accepts a pericope and returns a list of verse IDs
-  substitute          Accepts a block of text and replaces all pericopes in the text with verse IDs
-  reverse-substitute  Accepts a block of text and replaces collections of verse IDs with pericopes
   usage               Prints this message
 
       USAGE
