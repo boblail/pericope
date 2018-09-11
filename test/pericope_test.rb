@@ -36,7 +36,11 @@ class PericopeTest < Minitest::Test
       end
 
       should "not match things that do not look like pericopes" do
-        tests = [ "Cross 1", "Hezekiah 4:3" ]
+        tests = [
+          "Hezekiah 4:3",   # Not a real book of the Bible
+          "Psalm 1460003",  # `146` of `Psalm 146` is part of another word
+          "Jude 4abacus"    # `4a` of `Jude 4a` is part of another word
+        ]
 
         tests.each do |input|
           refute input[Pericope.regexp], "Expected Pericope to recognize that \"#{input}\" is not a potential pericope"
@@ -235,6 +239,7 @@ class PericopeTest < Minitest::Test
           "mt 12:13. "                        => "Matthew 12:13",
           "Luke 2---Maris "                   => "Luke 2",
           "Luke 3\"1---Aliquam "              => "Luke 3:1",
+          "Psalm 146; antiphon v. 2"          => "Psalm 146",
           "(Acts 13:4-20a)"                   => "Acts 13:4–20a" }
 
         tests.each do |input, expected_pericope|

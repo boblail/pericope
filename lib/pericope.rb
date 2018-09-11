@@ -151,8 +151,8 @@ class Pericope
       verse = "#{number}[#{letters}]?"
       chapter_verse_separator = '\s*[:"\.]\s*'
       list_or_range_separator = '\s*[\-–—,;]\s*'
-      chapter_and_verse = "(?:#{number + chapter_verse_separator})?" + verse
-      chapter_and_verse_or_letter = "(?:#{chapter_and_verse}|[#{letters}])"
+      chapter_and_verse = "(?:#{number + chapter_verse_separator})?" + verse + '\b'
+      chapter_and_verse_or_letter = "(?:#{chapter_and_verse}|[#{letters}]\\b)"
       chapter_and_verse + "(?:#{list_or_range_separator + chapter_and_verse_or_letter})*"
     end
 
