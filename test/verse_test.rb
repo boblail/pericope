@@ -26,6 +26,12 @@ class VerseTest < Minitest::Test
       refute v("44001004") < v("44001004a"), "Expected Acts 1:4 and Acts 1:4a to be sorted the same"
       refute v("44001004") > v("44001004a"), "Expected Acts 1:4 and Acts 1:4a to be sorted the same"
     end
+
+    should "raise an ArgumentError if you compare it to nil" do
+      assert_raises ArgumentError do
+        v(44001004) > nil
+      end
+    end
   end
 
 
