@@ -428,18 +428,17 @@ class PericopeTest < Minitest::Test
           assert_equal expected_pericope, Pericope.new(verses).ranges
         end
       end
+
+      should "ignore invalid verses" do
+        # Psalm 117:3 does not exist
+        assert_equal [r(19117001, 19117002)], Pericope.new(%w{19117001 19117002 19117003}).ranges
+      end
     end
 
     context "#to_a" do
       should "return an array of verses" do
         @tests.each do |reference, expected_verses|
           assert_equal expected_verses, Pericope(reference).to_a.map(&:to_id), "Given #{reference}"
-        end
-      end
-
-      should "raise an exception if pass an invalid verse" do
-        assert_raises ArgumentError do
-          Pericope.new([67001001])
         end
       end
     end

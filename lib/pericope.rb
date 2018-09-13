@@ -214,7 +214,13 @@ private
   def group_array_into_ranges(verses)
     return [] if verses.nil? or verses.empty?
 
-    verses = verses.flatten.compact.sort.map { |verse| Verse.parse(verse) }
+    verses = verses.flatten.compact.sort.each_with_object([]) do |verse, verses|
+      begin
+        verses << Verse.parse(verse)
+      rescue ArgumentError
+        # skip invalid verses
+      end
+    end
 
     ranges = []
     range_begin = verses.shift
