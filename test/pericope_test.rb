@@ -413,6 +413,21 @@ class PericopeTest < Minitest::Test
           assert_equal ranges, Pericope.new(verses).ranges
         end
       end
+
+      should "handle duplicated verses gracefully" do
+        tests = [
+          [%w{19150001 19150002 19150003 19150003 19150004 19150005 19150006}, [r(19150001, 19150006)]],
+          [%w{19117001 19117002 19117002a}, [r(19117001, 19117002)]],
+
+          # Duplicates of the last verse in a book are a special case because Pericope::Verse#next will return nil
+          [%w{19150001 19150002 19150003 19150004 19150005 19150006 19150006}, [r(19150001, 19150006)]],
+          [%w{19150001 19150002 19150003 19150004 19150005 19150006 19150006a}, [r(19150001, 19150006)]],
+        ]
+
+        tests.each do |(verses, expected_pericope)|
+          assert_equal expected_pericope, Pericope.new(verses).ranges
+        end
+      end
     end
 
     context "#to_a" do

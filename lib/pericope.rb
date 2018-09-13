@@ -223,9 +223,11 @@ private
       if verse > range_end.next
         ranges << Range.new(range_begin, range_end)
         range_begin = range_end = verse
-      else
+      elsif verse > range_end
         range_end = verse
       end
+
+      break if range_end.next.nil? # end of book
     end
 
     ranges << Range.new(range_begin, range_end)
