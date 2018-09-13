@@ -21,6 +21,7 @@ class Pericope
     end
 
     def <=>(other)
+      raise ArgumentError, "Comparison of Pericope::Verse with #{other.class} failed" unless other.is_a?(Pericope::Verse)
       [ book, chapter, verse, letter || "a" ] <=> [ other.book, other.chapter, other.verse, other.letter || "a" ]
     end
 

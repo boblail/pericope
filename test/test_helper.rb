@@ -6,3 +6,4 @@ MiniTest::Reporters.use! Minitest::Reporters::TurnReporter.new
 
 require "shoulda/context"
 require "minitest/autorun"
+require "pry"
