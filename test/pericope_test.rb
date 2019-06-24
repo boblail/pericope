@@ -226,6 +226,16 @@ class PericopeTest < Minitest::Test
         assert_equal [r(19001001, 19001006)], pericope.ranges
       end
 
+      should "handle oddly-formed references" do
+        tests = {
+          "Psa 40:3-4, 7-11. 16" => "Psalm 40:3–4, 7–16"
+        }
+
+        tests.each do |input, expected_pericope|
+          assert_equal expected_pericope, Pericope.parse_one(input).to_s, "Expected \"#{input}\" to yield pericope for \"#{expected_pericope}\""
+        end
+      end
+
       should "return nil for an invalid reference" do
         assert_nil Pericope.parse_one("nope")
       end

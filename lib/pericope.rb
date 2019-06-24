@@ -127,7 +127,7 @@ class Pericope
 
     def normalizations
       @_normalizations ||= [
-        [/(\d+)[".](\d+)/, '\1:\2'],        # 12"5 and 12.5 -> 12:5
+        [/(\d+)\s*[".]\s*(\d+)/, '\1:\2'],  # 12"5 and 12.5 -> 12:5
         [/[–—]/,           '-'],            # convert em dash and en dash to -
         [/[^0-9,:;\-–—#{letters}]/,  ''] ]  # remove everything but recognized symbols
     end
