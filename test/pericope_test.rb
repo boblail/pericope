@@ -300,6 +300,9 @@ class PericopeTest < Minitest::Test
         assert_equal "Jude 1–25", Pericope("Jude 1–25").to_s
       end
 
+      should "not omit verses when describing a whole chapter along with verses from another chapter" do
+        assert_equal "Genesis 2:8–9; 3:1–24", Pericope("Genesis 2:8-9, 3:1-24").to_s
+      end
 
       should "allow customizing :verse_range_separator" do
         assert_equal "John 1:1_7", Pericope.new("john 1:1-7").to_s(verse_range_separator: "_")

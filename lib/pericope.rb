@@ -177,6 +177,8 @@ private
     recent_chapter = 1 unless book_has_chapters?
     recent_verse = nil
 
+    touched_chapters = [ recent_chapter ].compact
+
     ranges.each_with_index.each_with_object("") do |(range, i), s|
       if i > 0
         if recent_chapter == range.begin.chapter
@@ -187,7 +189,7 @@ private
       end
 
       last_verse = Pericope.get_max_verse(book, range.end.chapter)
-      if !always_print_verse_range && range.begin.verse == 1 && range.begin.whole? && (range.end.verse > last_verse || range.end.whole? && range.end.verse == last_verse)
+      if !always_print_verse_range && range.begin.verse == 1 && range.begin.whole? && (range.end.verse > last_verse || range.end.whole? && range.end.verse == last_verse) && (touched_chapters - [range.begin.chapter]).none?
         s << range.begin.chapter.to_s
         s << "#{chapter_range_separator}#{range.end.chapter}" if range.end.chapter > range.begin.chapter
       else
@@ -207,6 +209,7 @@ private
 
         recent_chapter = range.end.chapter
         recent_verse = range.end.verse if range.end.partial?
+        touched_chapters |= [range.begin.chapter, range.end.chapter].uniq
       end
     end
   end
