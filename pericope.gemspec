@@ -19,8 +19,8 @@ Gem::Specification.new do |s|
   s.default_executable = "pericope"
   s.require_path = "lib"
 
-  s.add_development_dependency "bundler", "~> 1.10"
-  s.add_development_dependency "rake", "~> 10.0"
+  s.add_development_dependency "bundler"
+  s.add_development_dependency "rake"
   s.add_development_dependency "shoulda-context"
   s.add_development_dependency "pry"
   s.add_development_dependency "minitest", "~> 5.0"
